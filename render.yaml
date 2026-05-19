@@ -15,7 +15,6 @@ services:
     env: static
     plan: free
     branch: main
-    root: frontend
     buildCommand: npm ci && npm run build
     publishPath: dist
 
