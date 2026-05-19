@@ -43,6 +43,10 @@ def create_app():
         from backend.models.storyboard import SavedStoryboard, QueryHistory
         db.create_all()
 
+    @app.route('/health')
+    def health():
+        return {"status": "healthy"}, 200
+
     return app
 
 app = create_app()
