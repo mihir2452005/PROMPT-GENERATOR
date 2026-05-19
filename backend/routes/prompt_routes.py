@@ -8,12 +8,14 @@ prompt_bp = Blueprint('prompts', __name__)
 @prompt_bp.route('/generate', methods=['POST'])
 @jwt_required()
 def generate():
-    data = request.json
+    data = request.json or {}
+    topic = data.get('topic')
+    mood = data.get('mood')
 
-    prompt = generate_ai_prompt(
-        data.get('topic'),
-        data.get('mood')
-    )
+    if not topic or not mood:
+        return jsonify({'error': 'Topic and mood are required'}), 400
+
+    prompt = generate_ai_prompt(topic, mood)
 
     return jsonify({'prompt':prompt})
 

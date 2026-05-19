@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle } from 'lucide-react'
 import api from '../services/api'
+import { useAuth } from '../context/AuthContext'
 
 export default function PromptGenerator() {
   const [topic, setTopic] = useState('')
@@ -10,6 +11,7 @@ export default function PromptGenerator() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [copied, setCopied] = useState(false)
+  const { logout } = useAuth()
 
   async function generate() {
     if (!topic || !mood) {
@@ -25,7 +27,11 @@ export default function PromptGenerator() {
       setPrompt(res.data.prompt)
     } catch (err) {
       console.error('Generation error:', err)
-      setError('Failed to generate prompt. Please check your backend connection.')
+      if (err.response?.status === 401) {
+        logout()
+      } else {
+        setError(err.response?.data?.error || 'Failed to generate prompt. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
