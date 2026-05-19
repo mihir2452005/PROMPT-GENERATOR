@@ -1,0 +1,25 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+env/
+venv/
+ENV/
+.pytest_cache/
+*.sqlite3
+*.db
+*.log
+
+# Node
+node_modules/
+dist/
+.vite/
+.env
+.env.*
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
