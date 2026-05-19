@@ -12,6 +12,13 @@ class SavedStoryboard(db.Model):
     content = db.Column(db.Text, nullable=False)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __init__(self, user_id: int, topic: str, mood: str, platform: str, content: str):
+        self.user_id = user_id
+        self.topic = topic
+        self.mood = mood
+        self.platform = platform
+        self.content = content
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -32,6 +39,12 @@ class QueryHistory(db.Model):
     platform = db.Column(db.String(50))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+    def __init__(self, user_id: int, topic: str, mood: str, platform: str):
+        self.user_id = user_id
+        self.topic = topic
+        self.mood = mood
+        self.platform = platform
+
     def to_dict(self):
         return {
             'id': self.id,
@@ -41,3 +54,4 @@ class QueryHistory(db.Model):
             'platform': self.platform,
             'created_at': self.created_at.isoformat()
         }
+
