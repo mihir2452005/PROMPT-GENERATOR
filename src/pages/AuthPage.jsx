@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useNavigate } from 'react-router-dom'
+import { GoogleLogin } from '@react-oauth/google'
 import { Mail, Lock, Loader2, AlertCircle, ArrowRight, Sparkles } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
@@ -31,7 +32,6 @@ export default function AuthPage() {
         navigate('/')
       } else {
         await api.post('/register', { email, password })
-        // After register, auto login or ask them to login. Let's auto login.
         const loginRes = await api.post('/login', { email, password })
         login(loginRes.data.token)
         navigate('/')
@@ -42,6 +42,27 @@ export default function AuthPage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await api.post('/login/google', {
+        credential: credentialResponse.credential
+      })
+      login(res.data.token)
+      navigate('/')
+    } catch (err) {
+      console.error('Google auth error', err)
+      setError(err.response?.data?.error || 'Google authentication failed. Please try again.')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleGoogleError = () => {
+    setError('Google sign-in was cancelled or failed. Please try again.')
   }
 
   return (
@@ -69,8 +90,31 @@ export default function AuthPage() {
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col gap-6">
-          <div className="space-y-4">
+        <div className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col gap-6">
+          {/* Google Sign In */}
+          <div className="flex flex-col items-center gap-4">
+            <div className="w-full flex justify-center rounded-xl overflow-hidden">
+              <GoogleLogin
+                onSuccess={handleGoogleSuccess}
+                onError={handleGoogleError}
+                theme="filled_black"
+                shape="rectangular"
+                size="large"
+                text={isLogin ? 'signin_with' : 'signup_with'}
+                width="360"
+              />
+            </div>
+          </div>
+
+          {/* Divider */}
+          <div className="flex items-center gap-4">
+            <div className="flex-1 h-px bg-white/10" />
+            <span className="text-xs text-gray-500 uppercase tracking-widest font-medium">or</span>
+            <div className="flex-1 h-px bg-white/10" />
+          </div>
+
+          {/* Email/Password Form */}
+          <form onSubmit={handleSubmit} className="flex flex-col gap-4">
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-gray-500 group-focus-within:text-accent transition-colors">
                 <Mail size={18} />
@@ -96,7 +140,22 @@ export default function AuthPage() {
                 className="w-full bg-black/40 border border-white/10 rounded-xl py-3.5 pl-12 pr-4 text-white placeholder:text-gray-600 focus:outline-none focus:ring-2 focus:ring-accent focus:border-transparent transition-all shadow-inner"
               />
             </div>
-          </div>
+
+            <button 
+              type="submit"
+              disabled={loading}
+              className="w-full py-4 rounded-xl bg-gradient-to-r from-accent to-blue-600 hover:from-accent hover:to-blue-500 active:scale-[0.98] transition-all font-bold text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin" size={20} />
+              ) : (
+                <>
+                  {isLogin ? 'Sign In' : 'Create Account'}
+                  <ArrowRight size={18} />
+                </>
+              )}
+            </button>
+          </form>
 
           <AnimatePresence>
             {error && (
@@ -114,22 +173,7 @@ export default function AuthPage() {
             )}
           </AnimatePresence>
 
-          <button 
-            type="submit"
-            disabled={loading}
-            className="w-full py-4 rounded-xl bg-gradient-to-r from-accent to-blue-600 hover:from-accent hover:to-blue-500 active:scale-[0.98] transition-all font-bold text-white shadow-[0_0_20px_rgba(124,58,237,0.4)] flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {loading ? (
-              <Loader2 className="animate-spin" size={20} />
-            ) : (
-              <>
-                {isLogin ? 'Sign In' : 'Create Account'}
-                <ArrowRight size={18} />
-              </>
-            )}
-          </button>
-
-          <div className="text-center mt-2">
+          <div className="text-center">
             <button
               type="button"
               onClick={() => { setIsLogin(!isLogin); setError(null); }}
@@ -138,7 +182,7 @@ export default function AuthPage() {
               {isLogin ? "Don't have an account? Sign up" : "Already have an account? Sign in"}
             </button>
           </div>
-        </form>
+        </div>
       </motion.div>
     </div>
   )

@@ -7,14 +7,19 @@
     "build": "vite build"
   },
   "dependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0",
+    "@react-oauth/google": "^0.13.5",
+    "autoprefixer": "^10.4.0",
     "axios": "^1.6.0",
-    "react-router-dom": "^6.0.0",
     "framer-motion": "^11.0.0",
     "lucide-react": "^0.300.0",
-    "tailwindcss": "^3.4.0",
     "postcss": "^8.4.0",
-    "autoprefixer": "^10.4.0"
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0",
+    "react-router-dom": "^6.0.0",
+    "tailwindcss": "^3.4.0"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react": "^6.0.2",
+    "vite": "^8.0.13"
   }
 }
