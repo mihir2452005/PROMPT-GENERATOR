@@ -1,4 +1,7 @@
 {
+  "include": [
+    "backend"
+  ],
   "exclude": [
     "**/node_modules",
     "**/__pyrefly_virtual__",
@@ -6,10 +9,10 @@
   ],
   "executionEnvironments": [
     {
-      "root": "."
+      "root": "backend",
+      "extraPaths": [
+        "."
+      ]
     }
-  ],
-  "extraPaths": [
-    "."
   ]
 }
