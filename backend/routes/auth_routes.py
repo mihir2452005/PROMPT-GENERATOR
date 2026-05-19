@@ -31,7 +31,7 @@ def register():
     db.session.add(user)
     db.session.commit()
 
-    return jsonify({'message':'registered'})
+    return jsonify({'message': 'registered'})
 
 @auth_bp.route('/login', methods=['POST'])
 def login():
@@ -45,14 +45,18 @@ def login():
     user = User.query.filter_by(email=email).first()
 
     if not user:
-        return jsonify({'error':'invalid credentials'}),401
+        return jsonify({'error': 'Invalid credentials'}), 401
+
+    # Fix: Prevent backend crash if user signed up via Google and has no password hash
+    if not user.password:
+        return jsonify({'error': 'This account was created using Google Sign-In. Please click the Google Login button.'}), 400
 
     if not check_password_hash(user.password, password):
-        return jsonify({'error':'invalid credentials'}),401
+        return jsonify({'error': 'Invalid credentials'}), 401
 
     token = create_access_token(identity=str(user.id))
 
-    return jsonify({'token':token})
+    return jsonify({'token': token})
 
 @auth_bp.route('/login/google', methods=['POST'])
 def google_login():
@@ -62,11 +66,16 @@ def google_login():
     if not credential:
         return jsonify({'error': 'No credential provided'}), 400
 
-    try:
-        CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+    CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
 
+    # Fix: Clear configuration check to prevent cryptic crashes if client ID is missing
+    if not CLIENT_ID or CLIENT_ID.strip() in ('', 'YOUR_GOOGLE_CLIENT_ID'):
+        return jsonify({
+            'error': 'Google Client ID is not configured on the backend. Please add the GOOGLE_CLIENT_ID environment variable to Render.'
+        }), 500
+
+    try:
         # Verify the Google ID token
-        # If CLIENT_ID is set, verify audience. Otherwise skip audience check.
         idinfo = id_token.verify_oauth2_token(
             credential,
             google_requests.Request(),
@@ -76,11 +85,11 @@ def google_login():
         email = idinfo.get('email')
 
         if not email:
-            return jsonify({'error': 'Google token did not contain an email'}), 400
+            return jsonify({'error': 'Google token did not contain an email address'}), 400
 
         # Check if email is verified by Google
         if not idinfo.get('email_verified', False):
-            return jsonify({'error': 'Google email is not verified'}), 400
+            return jsonify({'error': 'Google email address is not verified'}), 400
 
         user = User.query.filter_by(email=email).first()
 
@@ -93,7 +102,6 @@ def google_login():
         return jsonify({'token': access_token})
 
     except ValueError as e:
-        return jsonify({'error': f'Token verification failed: {str(e)}'}), 401
+        return jsonify({'error': f'Google verification failed: {str(e)}'}), 401
     except Exception as e:
-        return jsonify({'error': f'Google auth error: {str(e)}'}), 500
-
+        return jsonify({'error': f'Google authentication service error: {str(e)}'}), 500

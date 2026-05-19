@@ -83,6 +83,65 @@ export default function PromptGenerator({ prefill }) {
     setTimeout(() => setCopiedIdx(null), 2000)
   }
 
+  const renderPromptText = (text) => {
+    if (!text) return null
+    const lines = text.split('\n')
+    return lines.map((line, index) => {
+      const cleanedLine = line.trim()
+      if (!cleanedLine) return <div key={index} className="h-2" />
+
+      // Check if it's the storyboard header
+      if (cleanedLine.startsWith('🎬') || cleanedLine.startsWith('**🎬')) {
+        const titleText = cleanedLine.replace(/\*\*/g, '').trim()
+        return (
+          <h4 key={index} className="text-base font-bold text-accent flex items-center gap-2 mt-1 mb-4 bg-accent/10 py-2 px-4 rounded-xl border border-accent/20 shadow-sm">
+            {titleText}
+          </h4>
+        )
+      }
+
+      // Check for storyboard metadata keys like **Visual Concept**: or **Camera Movement**:
+      if (cleanedLine.startsWith('**') && cleanedLine.includes('**:')) {
+        const parts = cleanedLine.split('**:')
+        const header = parts[0].replace(/\*\*/g, '').trim()
+        const content = parts.slice(1).join('**:').trim()
+        return (
+          <div key={index} className="mt-4 first:mt-0 mb-3">
+            <span className="text-xs font-semibold uppercase tracking-wider text-blue-400/90 block mb-1">
+              {header}
+            </span>
+            <p className="text-gray-200 text-sm leading-relaxed">{content}</p>
+          </div>
+        )
+      }
+
+      // Check for bullet timeline actions: - **[0:00 - 0:02]**: ... or * **[0:00 - 0:02]**: ...
+      if (cleanedLine.startsWith('-') || cleanedLine.startsWith('*')) {
+        let content = cleanedLine.substring(1).trim()
+        if (content.startsWith('**') && content.includes('**:')) {
+          const parts = content.split('**:')
+          const time = parts[0].replace(/\*\*/g, '').replace(/\[|\]/g, '').trim()
+          const action = parts.slice(1).join('**:').trim()
+          return (
+            <div key={index} className="flex items-start gap-3 pl-4 py-2 border-l-2 border-accent/30 hover:border-accent transition-colors my-2">
+              <span className="shrink-0 text-xs font-mono font-bold bg-accent/20 text-accent px-2 py-0.5 rounded border border-accent/30">
+                {time}
+              </span>
+              <p className="text-gray-300 text-sm leading-relaxed">{action}</p>
+            </div>
+          )
+        }
+      }
+
+      // Default fallback
+      return (
+        <p key={index} className="text-gray-300 text-sm leading-relaxed my-1">
+          {cleanedLine.replace(/\*\*/g, '')}
+        </p>
+      )
+    })
+  }
+
   const selectedPlatformName = platforms.find(p => p.id === platform)?.name || 'General'
 
   return (
@@ -101,7 +160,7 @@ export default function PromptGenerator({ prefill }) {
             <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               AI Prompt Engine
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">Generates 5 optimized prompts per request</p>
+            <p className="text-xs text-gray-500 mt-0.5">Generates 5 optimized storyboards per request</p>
           </div>
         </div>
 
@@ -162,12 +221,12 @@ export default function PromptGenerator({ prefill }) {
             {loading ? (
               <>
                 <Loader2 className="animate-spin" size={20} />
-                Generating 5 Prompts for {selectedPlatformName}...
+                Generating 5 Storyboards for {selectedPlatformName}...
               </>
             ) : (
               <>
                 <Sparkles size={20} />
-                Generate 5 Prompts for {selectedPlatformName}
+                Generate 5 Storyboards for {selectedPlatformName}
               </>
             )}
           </button>
@@ -200,7 +259,7 @@ export default function PromptGenerator({ prefill }) {
           >
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-lg font-bold text-white">Generated Prompts</h3>
+                <h3 className="text-lg font-bold text-white">Generated Storyboards</h3>
                 <p className="text-xs text-gray-500 mt-1">Optimized for {selectedPlatformName}</p>
               </div>
               {prompts.length > 1 && (
@@ -217,31 +276,33 @@ export default function PromptGenerator({ prefill }) {
             {loading ? (
               <div className="flex flex-col items-center justify-center py-16 gap-4">
                 <div className="w-12 h-12 border-4 border-accent/30 border-t-accent rounded-full animate-spin" />
-                <span className="text-sm font-medium text-accent animate-pulse">Crafting 5 cinematic prompts...</span>
+                <span className="text-sm font-medium text-accent animate-pulse">Crafting 5 storyboards...</span>
               </div>
             ) : (
-              <div className="space-y-4">
+              <div className="space-y-6">
                 {prompts.map((prompt, idx) => (
                   <motion.div
                     key={idx}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: idx * 0.1 }}
-                    className="group p-5 rounded-2xl bg-black/40 border border-white/5 hover:border-white/15 transition-all"
+                    className="group p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-white/15 transition-all shadow-xl"
                   >
                     <div className="flex items-start gap-4">
-                      <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center text-white text-sm font-bold mt-0.5">
+                      <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center text-white text-sm font-bold mt-1 shadow-md">
                         {idx + 1}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-gray-200 leading-relaxed text-sm">{prompt}</p>
-                        <div className="flex justify-end mt-3">
+                        <div className="space-y-1">
+                          {renderPromptText(prompt)}
+                        </div>
+                        <div className="flex justify-end mt-4 pt-3 border-t border-white/5">
                           <button 
                             onClick={() => copyToClipboard(prompt, idx)}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 transition-colors text-xs font-medium text-gray-400 hover:text-white"
                           >
                             {copiedIdx === idx ? <CheckCircle size={13} className="text-green-400" /> : <Copy size={13} />}
-                            {copiedIdx === idx ? 'Copied!' : 'Copy'}
+                            {copiedIdx === idx ? 'Copied Storyboard!' : 'Copy Storyboard'}
                           </button>
                         </div>
                       </div>
