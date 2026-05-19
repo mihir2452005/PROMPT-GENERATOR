@@ -11,7 +11,7 @@ def generate_ai_prompt(topic, mood):
 
     try:
         response = client.chat.completions.create(
-            model='gpt-4.1-mini',
+            model='gpt-4o-mini',
             messages=[
                 {
                     'role': 'system',
