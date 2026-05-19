@@ -142,13 +142,17 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
   const [showMetaAICopilot, setShowMetaAICopilot] = useState(false)
   const [copilotPromptText, setCopilotPromptText] = useState('')
   const [copilotClipName, setCopilotClipName] = useState('')
+  const [copilotPart, setCopilotPart] = useState(1)
 
-  const handleLaunchMetaAICopilot = (promptText, clipName) => {
+  const handleLaunchMetaAICopilot = (promptText, clipName, partNum, shouldOpenTab) => {
     navigator.clipboard.writeText(promptText)
     setCopilotPromptText(promptText)
     setCopilotClipName(clipName)
+    setCopilotPart(partNum)
     setShowMetaAICopilot(true)
-    window.open('https://meta.ai', '_blank')
+    if (shouldOpenTab) {
+      window.open('https://meta.ai', '_blank')
+    }
   }
 
 
@@ -451,7 +455,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
                                   {/* Compile with Meta AI Button */}
                                   <button
-                                    onClick={() => handleLaunchMetaAICopilot(data.part1.prompt, "Clip 1")}
+                                    onClick={() => handleLaunchMetaAICopilot(data.part1.prompt, "Clip 1", 1, true)}
                                     className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 text-white hover:text-cyan-200 transition-all text-xs font-extrabold flex items-center justify-center gap-2 border border-purple-500/40 shadow-lg shadow-purple-500/10 mt-1"
                                   >
                                     <Sparkles size={14} className="text-purple-300 animate-pulse" />
@@ -495,7 +499,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
                                   {/* Compile with Meta AI Button */}
                                   <button
-                                    onClick={() => handleLaunchMetaAICopilot(data.part2.prompt, "Clip 2")}
+                                    onClick={() => handleLaunchMetaAICopilot(data.part2.prompt, "Clip 2", 2, false)}
                                     className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 text-white hover:text-cyan-200 transition-all text-xs font-extrabold flex items-center justify-center gap-2 border border-purple-500/40 shadow-lg shadow-purple-500/10 mt-1"
                                   >
                                     <Sparkles size={14} className="text-purple-300 animate-pulse" />
@@ -565,24 +569,42 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                 <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 text-xs font-bold shrink-0 mt-0.5">1</div>
                   <div>
-                    <p className="text-xs font-bold text-white">Prompt Copied to Clipboard! 📋</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Your optimized storyboard prompt has been automatically copied.</p>
+                    <p className="text-xs font-bold text-white">
+                      {copilotPart === 1 ? 'Prompt 1 Copied to Clipboard! 📋' : 'Prompt 2 Copied to Clipboard! 📋'}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {copilotPart === 1 
+                        ? 'Your optimized storyboard prompt has been automatically copied.' 
+                        : 'Your seamless sequence continuation prompt has been copied.'}
+                    </p>
                   </div>
                 </div>
 
                 <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold shrink-0 mt-0.5">2</div>
                   <div>
-                    <p className="text-xs font-bold text-white">Meta AI Web Opened 🚀</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">We opened `meta.ai` in a separate tab or window for you.</p>
+                    <p className="text-xs font-bold text-white">
+                      {copilotPart === 1 ? 'Meta AI Web Opened 🚀' : 'Switch to Open Chat Tab 🔗'}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {copilotPart === 1 
+                        ? 'We opened `meta.ai` in a separate tab or window for you.' 
+                        : 'Simply switch back to your existing Meta AI tab where Clip 1 was generated.'}
+                    </p>
                   </div>
                 </div>
 
                 <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
                   <div className="w-6 h-6 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold shrink-0 mt-0.5">3</div>
                   <div>
-                    <p className="text-xs font-bold text-white">Paste & Compile (Free) 🎬</p>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Right-click the Meta AI text input, choose Paste (Ctrl+V), and hit Enter to generate beautiful animations instantly!</p>
+                    <p className="text-xs font-bold text-white">
+                      {copilotPart === 1 ? 'Paste & Compile (Free) 🎬' : 'Paste to Continue Sequence 🔄'}
+                    </p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      {copilotPart === 1 
+                        ? 'Right-click the Meta AI text input, choose Paste (Ctrl+V), and hit Enter to generate beautiful animations instantly!' 
+                        : 'Paste (Ctrl+V) directly into the same chat thread to continue the previous video sequence seamlessly!'}
+                    </p>
                   </div>
                 </div>
               </div>
