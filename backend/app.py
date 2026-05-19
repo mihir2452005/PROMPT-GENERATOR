@@ -22,8 +22,8 @@ def create_app():
     db.init_app(app)
     jwt.init_app(app)
 
-    from routes.auth_routes import auth_bp
-    from routes.prompt_routes import prompt_bp
+    from backend.routes.auth_routes import auth_bp
+    from backend.routes.prompt_routes import prompt_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(prompt_bp)

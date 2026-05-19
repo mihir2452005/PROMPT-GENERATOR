@@ -1,7 +1,7 @@
 
 from flask import Blueprint, request, jsonify
 from flask_jwt_extended import jwt_required
-from services.openai_service import generate_ai_prompt
+from backend.services.openai_service import generate_ai_prompt
 
 prompt_bp = Blueprint('prompts', __name__)
 
