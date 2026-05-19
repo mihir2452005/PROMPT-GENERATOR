@@ -26,14 +26,14 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
       } catch (err) {
         console.error('Failed to load platforms', err)
         setPlatforms([
-          { id: 'general', name: 'General / Universal' },
+          { id: 'general', name: 'General Video' },
           { id: 'meta_ai', name: 'Meta AI (Imagine)' },
           { id: 'runway', name: 'Runway Gen-3' },
           { id: 'sora', name: 'OpenAI Sora' },
           { id: 'kling', name: 'Kling AI' },
           { id: 'pika', name: 'Pika Labs' },
-          { id: 'midjourney', name: 'Midjourney' },
-          { id: 'stable_diffusion', name: 'Stable Diffusion' }
+          { id: 'luma', name: 'Luma Dream Machine' },
+          { id: 'haiper', name: 'Haiper AI' }
         ])
       }
     }
@@ -143,26 +143,26 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     if (!text) return null
     
     let title = "Storyboard Sequence"
-    const titleMatch = text.match(/🎬\s*\*\*Storyboard:\s*(.*?)\*\*/i) || text.match(/🎬\s*Storyboard:\s*(.*?)\n/i)
+    const titleMatch = text.match(/🎬\s*\*\*Storyboard:\s*(.*?)\*\*/i) || text.match(/🎬\s*Storyboard:\s*(.*?)(?:\n|$)/i)
     if (titleMatch) title = titleMatch[1].trim()
 
     let visualConcept = ""
-    const conceptMatch = text.match(/\*\*Visual Concept\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    const conceptMatch = text.match(/\*\*Visual Concept\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/Visual Concept:\s*(.*?)(?=\n|$)/i)
     if (conceptMatch) visualConcept = conceptMatch[1].trim()
 
     let cameraTrajectory = ""
-    const cameraMatch = text.match(/\*\*Camera Trajectory\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Camera Movement\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    const cameraMatch = text.match(/\*\*Camera Trajectory\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Camera Movement\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/Camera Trajectory:\s*(.*?)(?=\n|$)/i)
     if (cameraMatch) cameraTrajectory = cameraMatch[1].trim()
 
     let part1Action = ""
     let part1Camera = ""
     let part1Prompt = ""
-    const part1BlockMatch = text.match(/\*\*Part 1 Video Prompt.*?\*\*:\s*([\s\S]*?)(?=\*\*Part 2|$)/i)
+    const part1BlockMatch = text.match(/\*\*Part 1 Video Prompt.*?\*\*.*?:?\s*([\s\S]*?)(?=\*\*Part 2|$)/i) || text.match(/Part 1 Video Prompt.*?:?\s*([\s\S]*?)(?=Part 2|$)/i)
     if (part1BlockMatch) {
       const block = part1BlockMatch[1]
-      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)\n/i)
-      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)\n/i)
-      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?=\n|$)/i)
+      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*Action:\s*(.*?)(?:\n|$)/i)
+      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*Camera:\s*(.*?)(?:\n|$)/i)
+      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*.*Prompt:\s*`(.*?)`/i) || block.match(/-\s*.*Prompt:\s*(.*?)(?:\n|$)/i)
       if (actionM) part1Action = actionM[1].trim()
       if (cameraM) part1Camera = cameraM[1].trim()
       if (promptM) part1Prompt = promptM[1].trim()
@@ -171,19 +171,19 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     let part2Action = ""
     let part2Camera = ""
     let part2Prompt = ""
-    const part2BlockMatch = text.match(/\*\*Part 2 Video Prompt.*?\*\*:\s*([\s\S]*?)(?=\*\*Fluid|$)/i)
+    const part2BlockMatch = text.match(/\*\*Part 2 Video Prompt.*?\*\*.*?:?\s*([\s\S]*?)(?=\*\*Fluid|$)/i) || text.match(/Part 2 Video Prompt.*?:?\s*([\s\S]*?)(?=Fluid|$)/i)
     if (part2BlockMatch) {
       const block = part2BlockMatch[1]
-      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)\n/i)
-      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)\n/i)
-      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?=\n|$)/i)
+      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*Action:\s*(.*?)(?:\n|$)/i)
+      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*Camera:\s*(.*?)(?:\n|$)/i)
+      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?:\n|$)/i) || block.match(/-\s*.*Prompt:\s*`(.*?)`/i) || block.match(/-\s*.*Prompt:\s*(.*?)(?:\n|$)/i)
       if (actionM) part2Action = actionM[1].trim()
       if (cameraM) part2Camera = cameraM[1].trim()
       if (promptM) part2Prompt = promptM[1].trim()
     }
 
     let fluidEffects = ""
-    const fluidMatch = text.match(/\*\*Fluid Effects\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Special Animation Features\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    const fluidMatch = text.match(/\*\*Fluid Effects\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Special Animation Features\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/Fluid Effects:\s*(.*?)(?=\n|$)/i)
     if (fluidMatch) fluidEffects = fluidMatch[1].trim()
 
     return {

@@ -29,20 +29,20 @@ PLATFORM_GUIDES = {
         'style': 'fast-paced visual dynamics, key action-driven descriptions, 3D camera rotation, and atmospheric effect changes.',
         'example_prefix': 'A dynamic clip of'
     },
-    'midjourney': {
-        'name': 'Midjourney',
-        'style': 'vivid composition, cinematic cinematic, art style directions, rendering engine modifiers, hyper-detailed setting descriptors.',
-        'example_prefix': ''
+    'luma': {
+        'name': 'Luma Dream Machine',
+        'style': 'fluid physical motion, realistic physics simulations, smooth camera dollies, dramatic spatial transitions, and high-fidelity lighting shifts.',
+        'example_prefix': 'Cinematic video sequence of'
     },
-    'stable_diffusion': {
-        'name': 'Stable Diffusion',
-        'style': 'structural descriptions, precise composition terms, volumetric atmospheric tags, high resolution keywords, color grading palettes.',
-        'example_prefix': ''
+    'haiper': {
+        'name': 'Haiper AI',
+        'style': 'high-fidelity action dynamics, stylized slow-motion transitions, detailed volumetric fog, raytraced reflections, and seamless temporal flow.',
+        'example_prefix': 'A sweeping video showing'
     },
     'general': {
-        'name': 'General / Universal',
-        'style': 'highly adaptive storyboard layouts, detailed shot directions, camera transitions, and environmental color moods.',
-        'example_prefix': ''
+        'name': 'General Video',
+        'style': 'highly adaptive storyboard layouts, detailed shot directions, cinematic camera transitions, and environmental color moods optimized for video generation.',
+        'example_prefix': 'Cinematic video of'
     }
 }
 
