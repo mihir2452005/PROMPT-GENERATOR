@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star, Play, Video } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -136,6 +136,27 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
       console.error('Failed to toggle favorite', err)
     } finally {
       setFavoritingIdx(null)
+    }
+  }
+
+  const [generatingVideoKey, setGeneratingVideoKey] = useState(null)
+  const [generatedVideos, setGeneratedVideos] = useState({})
+  const [compilingError, setCompilingError] = useState(null)
+
+  const triggerVideoGeneration = async (promptText, key) => {
+    setGeneratingVideoKey(key)
+    setCompilingError(null)
+    try {
+      const res = await api.post('/generate-video', { prompt: promptText })
+      setGeneratedVideos(prev => ({
+        ...prev,
+        [key]: res.data.videoUrl
+      }))
+    } catch (err) {
+      console.error('Video compile error:', err)
+      setCompilingError(err.response?.data?.error || "Failed to generate video preview. Server is currently busy.")
+    } finally {
+      setGeneratingVideoKey(null)
     }
   }
 
@@ -426,13 +447,50 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                 </div>
                               </div>
                               {data.part1.prompt && (
-                                <button
-                                  onClick={() => copyToClipboard(data.part1.prompt, `${keyPrefix}-part1`)}
-                                  className="w-full py-2 px-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-accent/20"
-                                >
-                                  {copiedIdx === `${keyPrefix}-part1` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
-                                  {copiedIdx === `${keyPrefix}-part1` ? 'Copied Prompt 1!' : 'Copy Clip 1 Prompt'}
-                                </button>
+                                <div className="flex flex-col gap-2 w-full">
+                                  <button
+                                    onClick={() => copyToClipboard(data.part1.prompt, `${keyPrefix}-part1`)}
+                                    className="w-full py-2 px-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-accent/20"
+                                  >
+                                    {copiedIdx === `${keyPrefix}-part1` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
+                                    {copiedIdx === `${keyPrefix}-part1` ? 'Copied Prompt 1!' : 'Copy Clip 1 Prompt'}
+                                  </button>
+
+                                  {generatedVideos[`${keyPrefix}-part1`] ? (
+                                    <div className="rounded-xl overflow-hidden border border-accent/20 bg-black/40 shadow-inner mt-1">
+                                      <video 
+                                        src={generatedVideos[`${keyPrefix}-part1`]} 
+                                        controls 
+                                        autoPlay 
+                                        loop 
+                                        muted 
+                                        className="w-full h-auto object-cover max-h-36"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => triggerVideoGeneration(data.part1.prompt, `${keyPrefix}-part1`)}
+                                      disabled={generatingVideoKey !== null}
+                                      className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                                        generatingVideoKey === `${keyPrefix}-part1`
+                                          ? 'bg-accent/20 text-accent animate-pulse border-accent/30'
+                                          : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                                      }`}
+                                    >
+                                      {generatingVideoKey === `${keyPrefix}-part1` ? (
+                                        <>
+                                          <Loader2 size={12} className="animate-spin text-accent" />
+                                          Compiling Video...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Play size={12} />
+                                          Compile Video 1
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
 
@@ -459,13 +517,50 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                 </div>
                               </div>
                               {data.part2.prompt && (
-                                <button
-                                  onClick={() => copyToClipboard(data.part2.prompt, `${keyPrefix}-part2`)}
-                                  className="w-full py-2 px-3 rounded-lg bg-green-600/10 hover:bg-green-600/20 text-green-400 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-green-500/20"
-                                >
-                                  {copiedIdx === `${keyPrefix}-part2` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
-                                  {copiedIdx === `${keyPrefix}-part2` ? 'Copied Prompt 2!' : 'Copy Clip 2 Prompt'}
-                                </button>
+                                <div className="flex flex-col gap-2 w-full">
+                                  <button
+                                    onClick={() => copyToClipboard(data.part2.prompt, `${keyPrefix}-part2`)}
+                                    className="w-full py-2 px-3 rounded-lg bg-green-600/10 hover:bg-green-600/20 text-green-400 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-green-500/20"
+                                  >
+                                    {copiedIdx === `${keyPrefix}-part2` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
+                                    {copiedIdx === `${keyPrefix}-part2` ? 'Copied Prompt 2!' : 'Copy Clip 2 Prompt'}
+                                  </button>
+
+                                  {generatedVideos[`${keyPrefix}-part2`] ? (
+                                    <div className="rounded-xl overflow-hidden border border-green-500/20 bg-black/40 shadow-inner mt-1">
+                                      <video 
+                                        src={generatedVideos[`${keyPrefix}-part2`]} 
+                                        controls 
+                                        autoPlay 
+                                        loop 
+                                        muted 
+                                        className="w-full h-auto object-cover max-h-36"
+                                      />
+                                    </div>
+                                  ) : (
+                                    <button
+                                      onClick={() => triggerVideoGeneration(data.part2.prompt, `${keyPrefix}-part2`)}
+                                      disabled={generatingVideoKey !== null}
+                                      className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
+                                        generatingVideoKey === `${keyPrefix}-part2`
+                                          ? 'bg-green-500/20 text-green-400 animate-pulse border-green-500/30'
+                                          : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
+                                      }`}
+                                    >
+                                      {generatingVideoKey === `${keyPrefix}-part2` ? (
+                                        <>
+                                          <Loader2 size={12} className="animate-spin text-green-400" />
+                                          Compiling Video...
+                                        </>
+                                      ) : (
+                                        <>
+                                          <Play size={12} />
+                                          Compile Video 2
+                                        </>
+                                      )}
+                                    </button>
+                                  )}
+                                </div>
                               )}
                             </div>
                           </div>

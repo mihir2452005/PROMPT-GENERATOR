@@ -32,11 +32,13 @@ def create_app():
     from backend.routes.prompt_routes import prompt_bp
     from backend.routes.favorite_routes import favorite_bp
     from backend.routes.history_routes import history_bp
+    from backend.routes.video_routes import video_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(prompt_bp)
     app.register_blueprint(favorite_bp)
     app.register_blueprint(history_bp)
+    app.register_blueprint(video_bp)
 
     with app.app_context():
         # Import models so db.create_all knows about them

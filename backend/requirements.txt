@@ -11,3 +11,4 @@ gunicorn
 google-auth
 requests
 python-dotenv
+huggingface_hub
