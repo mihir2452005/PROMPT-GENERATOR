@@ -6,6 +6,7 @@ from backend.services.openai_service import generate_ai_prompt
 prompt_bp = Blueprint('prompts', __name__)
 
 @prompt_bp.route('/generate', methods=['POST'])
+@jwt_required()
 def generate():
     data = request.json
 
