@@ -10,3 +10,4 @@ celery
 werkzeug
 gunicorn
 google-auth
+requests
