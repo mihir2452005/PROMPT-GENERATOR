@@ -10,8 +10,8 @@ jwt = JWTManager()
 
 def create_app():
     app = Flask(__name__)
-    # Database configuration: use DATABASE_URL in env (Postgres on Render)
-    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL', 'sqlite:///meta.db')
+    # Database configuration: use DATABASE_URL in env (Postgres on Render), fallback to SQLite
+    app.config['SQLALCHEMY_DATABASE_URI'] = os.getenv('DATABASE_URL') or 'sqlite:///meta.db'
 
     # JWT secret must be provided in production via env `JWT_SECRET`
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET', 'dev-secret')
