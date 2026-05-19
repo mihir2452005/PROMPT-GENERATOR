@@ -21,13 +21,13 @@ def generate_video():
         return jsonify({'error': 'Hugging Face API token (HF_TOKEN) is not configured on the server. Please add it to your environment.'}), 500
 
     try:
-        # Connect to a top-tier free open-source video model
-        client = InferenceClient(api_key=hf_token)
+        # Connect to a top-tier WaveSpeed AI provider for text-to-video inference
+        client = InferenceClient(api_key=hf_token, provider="wavespeed")
         
-        # We query the spectacular LTX-Video model
+        # We query the spectacular and ultra-fast Wan-AI model
         video_bytes = client.text_to_video(
             prompt,
-            model="Lightricks/LTX-Video"
+            model="Wan-AI/Wan2.1-T2V-1.3B"
         )
         
         # Convert binary MP4 bytes to a Base64 string so frontend can render it inline instantly
