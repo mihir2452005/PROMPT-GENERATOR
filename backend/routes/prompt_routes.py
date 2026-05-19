@@ -19,7 +19,26 @@ def generate():
 
     prompts = generate_ai_prompts(topic, mood, platform, count)
 
+    # Save to search query history
+    try:
+        from flask_jwt_extended import get_jwt_identity
+        from backend.extensions import db
+        from backend.models.storyboard import QueryHistory
+        from datetime import datetime
+
+        user_id = int(get_jwt_identity())
+        existing = QueryHistory.query.filter_by(user_id=user_id, topic=topic, mood=mood, platform=platform).first()
+        if existing:
+            existing.created_at = datetime.utcnow()
+        else:
+            new_history = QueryHistory(user_id=user_id, topic=topic, mood=mood, platform=platform)
+            db.session.add(new_history)
+        db.session.commit()
+    except Exception as e:
+        print(f"Failed to save search history: {str(e)}")
+
     return jsonify({'prompts': prompts, 'platform': platform})
+
 
 @prompt_bp.route('/platforms')
 def platforms():

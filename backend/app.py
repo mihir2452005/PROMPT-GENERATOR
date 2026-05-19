@@ -30,11 +30,17 @@ def create_app():
 
     from backend.routes.auth_routes import auth_bp
     from backend.routes.prompt_routes import prompt_bp
+    from backend.routes.favorite_routes import favorite_bp
+    from backend.routes.history_routes import history_bp
 
     app.register_blueprint(auth_bp)
     app.register_blueprint(prompt_bp)
+    app.register_blueprint(favorite_bp)
+    app.register_blueprint(history_bp)
 
     with app.app_context():
+        # Import models so db.create_all knows about them
+        from backend.models.storyboard import SavedStoryboard, QueryHistory
         db.create_all()
 
     return app

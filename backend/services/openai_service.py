@@ -6,7 +6,7 @@ from openai import OpenAI
 PLATFORM_GUIDES = {
     'meta_ai': {
         'name': 'Meta AI (Imagine)',
-        'style': 'highly descriptive, detailed visual sequences, cinematic framing, photo-realistic rendering, and dynamic lighting modifiers.',
+        'style': 'highly descriptive visual sequences, cinematic framing, photo-realistic rendering, and dynamic lighting modifiers.',
         'example_prefix': 'A cinematic video sequence of'
     },
     'runway': {
@@ -51,52 +51,72 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
     api_key = os.getenv('OPENAI_API_KEY')
     platform_info = PLATFORM_GUIDES.get(platform, PLATFORM_GUIDES['general'])
 
-    # Rich timeline-based fallback prompts to guarantee 5 high-quality results even without an API key
+    # Rich multi-part fallback prompts (Part 1 and Part 2) to guarantee a spectacular offline experience
     fallback_prompts = [
-        f"🎬 **Storyboard Sequence: The Opening Shot**\n"
-        f"**Visual Concept**: A breathtaking cinematic shot of {topic} engulfed in a deep {mood} atmosphere.\n"
-        f"**Camera Movement**: Smooth, slow drone fly-by panning downwards to establish the grand scale of the landscape.\n"
-        f"**Temporal Timeline**:\n"
-        f"- **[0:00 - 0:02]**: The camera sweeps past high cinematic clouds, revealing {topic} illuminated by a faint, soft backlight.\n"
-        f"- **[0:02 - 0:05]**: On second 2, a sudden shift in lighting highlights moving dust particles and atmospheric glow; shadows stretch gracefully.\n"
-        f"- **[0:05 - 0:10]**: From second 5 onwards, the camera dollys closer as subtle fluid animations start to float gently across the frame.\n"
-        f"**Special Features**: Dynamic volumetric fog, realistic lighting flares, 8K resolution.",
+        f"🎬 **Storyboard: The Epic Opening**\n"
+        f"**Visual Concept**: A grand visual masterpiece showing {topic} with a strong {mood} style.\n"
+        f"**Camera Trajectory**: Dynamic cinematic pan seamlessly tracking from close up to establishing wide-angle.\n"
+        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+        f"- **Action**: Cinematic close-up on the central details of {topic} as atmospheric {mood} light flares slowly pass across the lens.\n"
+        f"- **Camera**: Smooth 3D gimbal tracking pan moving right to left.\n"
+        f"- **Meta AI/Engine Prompt**: `Cinematic tracking shot of {topic}, shallow depth of field, warm {mood} volumetric lighting, photorealistic --ar 16:9`\n"
+        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+        f"- **Action**: The camera pulls back dramatically, seamlessly revealing the entire glowing expanse of the setting under changing lighting transitions.\n"
+        f"- **Camera**: Dynamic crane shot rising up and back, maintaining continuous subject focus.\n"
+        f"- **Meta AI/Engine Prompt**: `Dolly-out drone perspective, continuous flow from previous scene, {topic} fully revealed, deep shadows, cinematic scale --ar 16:9`\n"
+        f"**Fluid Effects**: Volumetric clouds, raytraced reflections.",
 
-        f"🎬 **Storyboard Sequence: The Macro Focus**\n"
-        f"**Visual Concept**: An intimate, hyper-detailed macro view focusing on the fine textures of {topic} reflecting a {mood} ambient palette.\n"
-        f"**Camera Movement**: Extremely narrow depth-of-field close-up with a slow, continuous focus-pull from the background to the foreground.\n"
-        f"**Temporal Timeline**:\n"
-        f"- **[0:00 - 0:02]**: The frame starts with a soft, circular bokeh. Only the outermost edge of {topic} is visible in sharp detail.\n"
-        f"- **[0:02 - 0:05]**: On second 3, the lens smoothly shifts focus, revealing glowing liquid droplets or metallic reflections shifting under the light.\n"
-        f"- **[0:05 - 0:10]**: From second 6, the lighting brightens slightly and the camera tilts, capturing dramatic shadows moving across the micro-surfaces.\n"
-        f"**Special Features**: Ray-traced reflections, high-speed camera motion capture (120fps feel).",
+        f"🎬 **Storyboard: The Micro & Macro Focus**\n"
+        f"**Visual Concept**: An intimate view focusing on the fine textures of {topic} reflecting a {mood} ambient palette.\n"
+        f"**Camera Trajectory**: Focus pull transitioning from abstract background bokeh into macro level clarity.\n"
+        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+        f"- **Action**: Extreme close-up of {topic} surfaces, catching soft circular light rays bouncing off organic edges.\n"
+        f"- **Camera**: Slow, delicate forward push along the Z-axis.\n"
+        f"- **Meta AI/Engine Prompt**: `Macro lens close up of {topic}, soft {mood} mood, bokeh reflections, highly detailed, slow slide --ar 16:9`\n"
+        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+        f"- **Action**: Focus smoothly shifts from the front texture to reveal a larger moving subject or water droplet sliding off {topic}.\n"
+        f"- **Camera**: Slow focal transition with a gentle camera rotation.\n"
+        f"- **Meta AI/Engine Prompt**: `Macro focus-pull on {topic}, glowing liquid droplet sliding down, dramatic shadows, HSL color grade --ar 16:9`\n"
+        f"**Fluid Effects**: Water droplet simulation, cinematic focus-pull.",
 
-        f"🎬 **Storyboard Sequence: The Transition Phase**\n"
-        f"**Visual Concept**: A dynamic time-lapse sequence showcasing {topic} undergoing a magical environmental transition reflecting the {mood} theme.\n"
-        f"**Camera Movement**: Static camera position on a steady tripod with dramatic zoom magnification.\n"
-        f"**Temporal Timeline**:\n"
-        f"- **[0:00 - 0:02]**: The scene opens under quiet, overcast skies. The textures of {topic} appear still and heavy.\n"
-        f"- **[0:02 - 0:05]**: On second 2, a sudden energetic burst of particles or weather changes starts to sweep across the scene; clouds roll fast.\n"
-        f"- **[0:05 - 0:10]**: From second 5, the transition reaches its peak with luminous rays piercing through, casting long, epic shadows.\n"
-        f"**Special Features**: High-speed cloud motion, dynamic wind/dust simulations.",
+        f"🎬 **Storyboard: The Atmospheric Transition**\n"
+        f"**Visual Concept**: A dynamic sequence showcasing {topic} undergoing a magical environmental transition reflecting the {mood} theme.\n"
+        f"**Camera Trajectory**: Static tripod position with sweeping panning movement.\n"
+        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+        f"- **Action**: The scene starts with {topic} shrouded in deep, heavy {mood} shadows, mist swirling at the base.\n"
+        f"- **Camera**: Static locked-off composition with subtle camera vibrations.\n"
+        f"- **Meta AI/Engine Prompt**: `Atmospheric moody shot of {topic} covered in dense mist, misty shadows, realistic physics, dark cinematic style --ar 16:9`\n"
+        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+        f"- **Action**: Mist begins to thin rapidly as powerful glowing light rays pierce through the clouds, lighting up {topic}.\n"
+        f"- **Camera**: Slow tracking dolly-in through the thinning haze.\n"
+        f"- **Meta AI/Engine Prompt**: `Cinematic dolly through mist, dramatic light beams revealing {topic}, dynamic weather, particles in light --ar 16:9`\n"
+        f"**Fluid Effects**: Realistic mist simulation, particle wind.",
 
-        f"🎬 **Storyboard Sequence: The Action Sequence**\n"
+        f"🎬 **Storyboard: The Dynamic Action Run**\n"
         f"**Visual Concept**: An epic, high-energy action tracking shot centered around {topic} with a powerful, cinematic {mood} undertone.\n"
-        f"**Camera Movement**: Fast-moving tracking shot that flies alongside the subject, maintaining low-angle perspective.\n"
-        f"**Temporal Timeline**:\n"
-        f"- **[0:00 - 0:02]**: Intense action begins instantly. Debris or sparks fly past the camera lens in slow motion.\n"
-        f"- **[0:02 - 0:05]**: On second 3, a dramatic burst of energy or motion change pushes the camera backwards, emphasizing speed and scale.\n"
-        f"- **[0:05 - 0:10]**: From second 6 to 10, the motion decelerates into a gorgeous, stylized bullet-time sequence showing floating elements frozen in air.\n"
-        f"**Special Features**: Slow-motion action mechanics, highly detailed interactive particle systems.",
+        f"**Camera Trajectory**: High speed horizontal tracking shot alongside the main subject.\n"
+        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+        f"- **Action**: Energetic movement begins instantly, sparks and dust flying off {topic} as it animates into action.\n"
+        f"- **Camera**: Fast tracking shot moving horizontally.\n"
+        f"- **Meta AI/Engine Prompt**: `Action tracking shot of {topic} moving fast, glowing sparks flying behind, high speed action, cinematic --ar 16:9`\n"
+        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+        f"- **Action**: A sudden slow-motion drop where all sparks freeze in the air in bullet-time around {topic}.\n"
+        f"- **Camera**: Orbiting 360-degree rotational camera movement in super slow motion.\n"
+        f"- **Meta AI/Engine Prompt**: `Super slow motion bullet-time orbit of {topic}, frozen glowing particles in mid-air, 3D rotating angle, photorealistic --ar 16:9`\n"
+        f"**Fluid Effects**: High-speed particle system, custom bullet-time simulation.",
 
-        f"🎬 **Storyboard Sequence: The Climactic Close**\n"
+        f"🎬 **Storyboard: The Cinematic Horizon**\n"
         f"**Visual Concept**: A highly emotional, artistic visualization of {topic} that brings out a deep, lingering {mood} feeling.\n"
-        f"**Camera Movement**: Slow crane shot rising up and pulling back, gradually revealing the wider, massive context of the scene.\n"
-        f"**Temporal Timeline**:\n"
-        f"- **[0:00 - 0:02]**: The camera starts extremely close to a key focal element of {topic}, capturing soft, warm environmental reflections.\n"
-        f"- **[0:02 - 0:05]**: On second 3, the crane rises. A beautiful silhouette forms against a dramatic backdrop lighting source.\n"
-        f"- **[0:05 - 0:10]**: The camera continues rising to reveal a grand, atmospheric view; elements fade softly into misty horizons.\n"
-        f"**Special Features**: Masterpiece color grading, cinematic atmospheric haze, cinematic aspect ratio."
+        f"**Camera Trajectory**: High vertical rise transitioning into a peaceful sweeping horizon.\n"
+        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+        f"- **Action**: Close silhouette of {topic} resting against a gorgeous, sweeping gradient background of {mood} sky.\n"
+        f"- **Camera**: Slow, rhythmic vertical crane rising upwards.\n"
+        f"- **Meta AI/Engine Prompt**: `Low angle silhouette of {topic}, glowing colorful sky, cinematic gradients, peaceful HSL colors, majestic crane shot --ar 16:9`\n"
+        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+        f"- **Action**: The camera reaches the peak of the crane, fully capturing a breathtaking sunset/sunrise casting long gold shadows across the horizon.\n"
+        f"- **Camera**: Slow, elegant panning shot towards the sun.\n"
+        f"- **Meta AI/Engine Prompt**: `Cinematic sunset panning shot, golden hours, {topic} in landscape silhouette, long shadows, perfect lens flare --ar 16:9`\n"
+        f"**Fluid Effects**: Golden lens flares, atmospheric dust."
     ]
 
     if not api_key:
@@ -104,32 +124,36 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
 
     client = OpenAI(api_key=api_key)
 
-    system_prompt = f"""You are a world-class AI Prompt Engineer and cinematic video director specializing in creating professional storyboards and video script prompts for {platform_info['name']}.
+    system_prompt = f"""You are a world-class AI Prompt Engineer and cinematic video director specializing in creating professional storyboard prompts for {platform_info['name']}.
 
 Your goal is to generate {count} highly detailed, epic, and cinematic video script prompts.
-Every single prompt you generate must be a comprehensive storyboard featuring an animation timeline detailing EXACTLY what happens second-by-second (e.g. from second 0 to second 10).
+Every single prompt you generate must be a continuous, sequential 2-Part Video Prompt designed to solve the 5-second video generation limit on platforms like Meta AI.
+This allows the user to copy Part 1, generate a 5-second clip, and then copy Part 2 to generate a seamless continuous continuation!
 
 Each of the {count} prompts in the JSON list MUST follow this exact, rich formatting structure:
 
-🎬 **Storyboard Sequence: [Epic Creative Title]**
+🎬 **Storyboard: [Epic Creative Title]**
 **Visual Concept**: [Vivid and detailed description of the scene's visual subject, elements, atmosphere, and {platform_info['style']}]
-**Camera Movement**: [Exact professional camera direction: e.g. dollying, panning, crane shot, focus pull, focal lengths, speeds]
-**Temporal Timeline**:
-- **[0:00 - 0:02]**: [Describe what happens at the start of the video. Focus on composition and initial subject action]
-- **[0:02 - 0:05]**: [On second 2, detail how the scene animatedly changes, what movement occurs, shifts in lighting, or environmental reactions]
-- **[0:05 - 0:10]**: [From second 5 to 10, detail the epic climax, camera transitions, slow-motion features, and final shot composition]
-**Special Animation Features**: [Fluid dynamics, glowing particles, wind effects, material transformations, or lighting shifts to animate the scene]
-**Optimized for {platform_info['name']}**: [Specific camera settings, aspect ratios like --ar 16:9, motion rates, resolution tags, photorealistic style settings]
+**Camera Trajectory**: [Exact professional camera direction: e.g. dollying, panning, crane shot, focus pull, focal lengths, speeds]
+**Part 1 Video Prompt (0:00 - 0:05)**:
+- **Action**: [Describe the exact visual action occurring in the first 5 seconds of the video]
+- **Camera**: [Describe the camera movement for this segment]
+- **{platform_info['name']} Prompt**: `[{platform_info['example_prefix']} cinematic shot of topic, mood/lighting tags, composition details]`
+**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):
+- **Action**: [Detail how the scene seamlessly continues, what next motion occurs, shifts in lighting, or environmental reactions]
+- **Camera**: [Describe the continuous camera movement starting from the end position of Part 1]
+- **{platform_info['name']} Prompt**: `[continuous action prompt, seamless flow from previous scene, final climax, specific platform settings]`
+**Fluid Effects**: [Fluid dynamics, glowing particles, wind effects, material transformations, or lighting shifts to animate the scene]
 
 IMPORTANT: You must return ONLY a valid JSON array of exactly {count} strings. Do NOT include markdown around the JSON, do NOT output code block formatting (like ```json), and do not add any conversational text. Return only the raw JSON array of strings so that it can be parsed perfectly by `json.loads`.
 
 Example output format:
 [
-  "🎬 **Storyboard Sequence: ...**\\n**Visual Concept**: ...\\n**Camera Movement**: ...\\n**Temporal Timeline**:\\n- **[0:00 - 0:02]**: ...\\n- **[0:02 - 0:05]**: ...\\n- **[0:05 - 0:10]**: ...\\n**Special Animation Features**: ...\\n**Optimized for Midjourney**: ...",
+  "🎬 **Storyboard: ...**\\n**Visual Concept**: ...\\n**Camera Trajectory**: ...\\n**Part 1 Video Prompt (0:00 - 0:05)**:\\n- **Action**: ...\\n- **Camera**: ...\\n- **Meta AI Prompt**: `...`\\n**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\\n- **Action**: ...\\n- **Camera**: ...\\n- **Meta AI Prompt**: `...`\\n**Fluid Effects**: ...",
   "..."
 ]"""
 
-    user_prompt = f"Generate {count} unique, highly cinematic, story-driven, second-by-second video script prompts about \"{topic}\" with a powerful \"{mood}\" mood/atmosphere. Ensure the prompts are long, highly descriptive, and optimized for {platform_info['name']}."
+    user_prompt = f"Generate {count} unique, highly cinematic, 2-Part continuous video prompts about \"{topic}\" with a powerful \"{mood}\" mood/atmosphere. Ensure the prompts are long, highly descriptive, and optimized for {platform_info['name']}."
 
     try:
         response = client.chat.completions.create(
@@ -138,8 +162,8 @@ Example output format:
                 {'role': 'system', 'content': system_prompt},
                 {'role': 'user', 'content': user_prompt}
             ],
-            temperature=0.85,
-            max_tokens=3000
+            temperature=0.8,
+            max_tokens=3500
         )
 
         content = response.choices[0].message.content.strip()
@@ -178,7 +202,7 @@ Example output format:
         temp_prompts = []
         current_prompt = []
         for line in lines:
-            if line.startswith('🎬') or 'Storyboard Sequence' in line:
+            if line.startswith('🎬') or 'Storyboard' in line:
                 if current_prompt:
                     temp_prompts.append('\n'.join(current_prompt))
                     current_prompt = []
@@ -203,4 +227,3 @@ def get_supported_platforms():
         {'id': key, 'name': info['name']}
         for key, info in PLATFORM_GUIDES.items()
     ]
-

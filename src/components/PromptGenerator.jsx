@@ -1,18 +1,20 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor } from 'lucide-react'
+import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
-export default function PromptGenerator({ prefill }) {
+export default function PromptGenerator({ prefill, onGenerateSuccess, onFavoritesChange, favoritesRefreshTrigger }) {
   const [topic, setTopic] = useState('')
   const [mood, setMood] = useState('')
   const [platform, setPlatform] = useState('general')
   const [platforms, setPlatforms] = useState([])
   const [prompts, setPrompts] = useState([])
+  const [favorites, setFavorites] = useState([])
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [copiedIdx, setCopiedIdx] = useState(null)
+  const [favoritingIdx, setFavoritingIdx] = useState(null)
   const { logout } = useAuth()
 
   // Load platforms on mount
@@ -38,11 +40,28 @@ export default function PromptGenerator({ prefill }) {
     fetchPlatforms()
   }, [])
 
-  // Apply prefill from TrendSection clicks
+  // Load favorites to check matching status
+  const fetchFavorites = async () => {
+    try {
+      const res = await api.get('/favorites')
+      setFavorites(res.data)
+    } catch (err) {
+      console.error('Failed to sync favorites in generator', err)
+    }
+  }
+
+  useEffect(() => {
+    fetchFavorites()
+  }, [favoritesRefreshTrigger])
+
+  // Apply prefill from TrendSection or HistorySection clicks
   useEffect(() => {
     if (prefill) {
       setTopic(prefill.topic || '')
       setMood(prefill.mood || '')
+      if (prefill.platform) {
+        setPlatform(prefill.platform)
+      }
     }
   }, [prefill])
 
@@ -58,6 +77,12 @@ export default function PromptGenerator({ prefill }) {
     try {
       const res = await api.post('/generate', { topic, mood, platform, count: 5 })
       setPrompts(res.data.prompts)
+      
+      // Sync list state of search history and favorites
+      if (onGenerateSuccess) {
+        onGenerateSuccess()
+      }
+      fetchFavorites()
     } catch (err) {
       console.error('Generation error:', err)
       if (err.response?.status === 401) {
@@ -70,9 +95,9 @@ export default function PromptGenerator({ prefill }) {
     }
   }
 
-  const copyToClipboard = (text, idx) => {
+  const copyToClipboard = (text, key) => {
     navigator.clipboard.writeText(text)
-    setCopiedIdx(idx)
+    setCopiedIdx(key)
     setTimeout(() => setCopiedIdx(null), 2000)
   }
 
@@ -83,63 +108,92 @@ export default function PromptGenerator({ prefill }) {
     setTimeout(() => setCopiedIdx(null), 2000)
   }
 
-  const renderPromptText = (text) => {
+  // Toggle favorite status on/off
+  const toggleFavorite = async (promptText, idx) => {
+    setFavoritingIdx(idx)
+    try {
+      const match = favorites.find(f => f.content === promptText)
+      if (match) {
+        // Remove from favorites
+        await api.delete(`/favorites/${match.id}`)
+        setFavorites(favorites.filter(f => f.id !== match.id))
+      } else {
+        // Add to favorites
+        const res = await api.post('/favorites', {
+          topic,
+          mood,
+          platform,
+          content: promptText
+        })
+        setFavorites([...favorites, res.data.favorite])
+      }
+      
+      // Trigger sidebar update
+      if (onFavoritesChange) {
+        onFavoritesChange()
+      }
+    } catch (err) {
+      console.error('Failed to toggle favorite', err)
+    } finally {
+      setFavoritingIdx(null)
+    }
+  }
+
+  const parseStoryboardText = (text) => {
     if (!text) return null
-    const lines = text.split('\n')
-    return lines.map((line, index) => {
-      const cleanedLine = line.trim()
-      if (!cleanedLine) return <div key={index} className="h-2" />
+    
+    let title = "Storyboard Sequence"
+    const titleMatch = text.match(/🎬\s*\*\*Storyboard:\s*(.*?)\*\*/i) || text.match(/🎬\s*Storyboard:\s*(.*?)\n/i)
+    if (titleMatch) title = titleMatch[1].trim()
 
-      // Check if it's the storyboard header
-      if (cleanedLine.startsWith('🎬') || cleanedLine.startsWith('**🎬')) {
-        const titleText = cleanedLine.replace(/\*\*/g, '').trim()
-        return (
-          <h4 key={index} className="text-base font-bold text-accent flex items-center gap-2 mt-1 mb-4 bg-accent/10 py-2 px-4 rounded-xl border border-accent/20 shadow-sm">
-            {titleText}
-          </h4>
-        )
-      }
+    let visualConcept = ""
+    const conceptMatch = text.match(/\*\*Visual Concept\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    if (conceptMatch) visualConcept = conceptMatch[1].trim()
 
-      // Check for storyboard metadata keys like **Visual Concept**: or **Camera Movement**:
-      if (cleanedLine.startsWith('**') && cleanedLine.includes('**:')) {
-        const parts = cleanedLine.split('**:')
-        const header = parts[0].replace(/\*\*/g, '').trim()
-        const content = parts.slice(1).join('**:').trim()
-        return (
-          <div key={index} className="mt-4 first:mt-0 mb-3">
-            <span className="text-xs font-semibold uppercase tracking-wider text-blue-400/90 block mb-1">
-              {header}
-            </span>
-            <p className="text-gray-200 text-sm leading-relaxed">{content}</p>
-          </div>
-        )
-      }
+    let cameraTrajectory = ""
+    const cameraMatch = text.match(/\*\*Camera Trajectory\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Camera Movement\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    if (cameraMatch) cameraTrajectory = cameraMatch[1].trim()
 
-      // Check for bullet timeline actions: - **[0:00 - 0:02]**: ... or * **[0:00 - 0:02]**: ...
-      if (cleanedLine.startsWith('-') || cleanedLine.startsWith('*')) {
-        let content = cleanedLine.substring(1).trim()
-        if (content.startsWith('**') && content.includes('**:')) {
-          const parts = content.split('**:')
-          const time = parts[0].replace(/\*\*/g, '').replace(/\[|\]/g, '').trim()
-          const action = parts.slice(1).join('**:').trim()
-          return (
-            <div key={index} className="flex items-start gap-3 pl-4 py-2 border-l-2 border-accent/30 hover:border-accent transition-colors my-2">
-              <span className="shrink-0 text-xs font-mono font-bold bg-accent/20 text-accent px-2 py-0.5 rounded border border-accent/30">
-                {time}
-              </span>
-              <p className="text-gray-300 text-sm leading-relaxed">{action}</p>
-            </div>
-          )
-        }
-      }
+    let part1Action = ""
+    let part1Camera = ""
+    let part1Prompt = ""
+    const part1BlockMatch = text.match(/\*\*Part 1 Video Prompt.*?\*\*:\s*([\s\S]*?)(?=\*\*Part 2|$)/i)
+    if (part1BlockMatch) {
+      const block = part1BlockMatch[1]
+      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)\n/i)
+      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)\n/i)
+      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?=\n|$)/i)
+      if (actionM) part1Action = actionM[1].trim()
+      if (cameraM) part1Camera = cameraM[1].trim()
+      if (promptM) part1Prompt = promptM[1].trim()
+    }
 
-      // Default fallback
-      return (
-        <p key={index} className="text-gray-300 text-sm leading-relaxed my-1">
-          {cleanedLine.replace(/\*\*/g, '')}
-        </p>
-      )
-    })
+    let part2Action = ""
+    let part2Camera = ""
+    let part2Prompt = ""
+    const part2BlockMatch = text.match(/\*\*Part 2 Video Prompt.*?\*\*:\s*([\s\S]*?)(?=\*\*Fluid|$)/i)
+    if (part2BlockMatch) {
+      const block = part2BlockMatch[1]
+      const actionM = block.match(/-\s*\*\*Action\*\*:\s*(.*?)\n/i)
+      const cameraM = block.match(/-\s*\*\*Camera\*\*:\s*(.*?)\n/i)
+      const promptM = block.match(/-\s*\*\*.*Prompt\*\*:\s*`(.*?)`/i) || block.match(/-\s*\*\*.*Prompt\*\*:\s*(.*?)(?=\n|$)/i)
+      if (actionM) part2Action = actionM[1].trim()
+      if (cameraM) part2Camera = cameraM[1].trim()
+      if (promptM) part2Prompt = promptM[1].trim()
+    }
+
+    let fluidEffects = ""
+    const fluidMatch = text.match(/\*\*Fluid Effects\*\*:\s*(.*?)(?=\n\*\*|$)/i) || text.match(/\*\*Special Animation Features\*\*:\s*(.*?)(?=\n\*\*|$)/i)
+    if (fluidMatch) fluidEffects = fluidMatch[1].trim()
+
+    return {
+      title,
+      visualConcept,
+      cameraTrajectory,
+      part1: { action: part1Action, camera: part1Camera, prompt: part1Prompt },
+      part2: { action: part2Action, camera: part2Camera, prompt: part2Prompt },
+      fluidEffects
+    }
   }
 
   const selectedPlatformName = platforms.find(p => p.id === platform)?.name || 'General'
@@ -160,7 +214,7 @@ export default function PromptGenerator({ prefill }) {
             <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
               AI Prompt Engine
             </h2>
-            <p className="text-xs text-gray-500 mt-0.5">Generates 5 optimized storyboards per request</p>
+            <p className="text-xs text-gray-500 mt-0.5">Generates 5 continuous multi-part storyboards</p>
           </div>
         </div>
 
@@ -260,7 +314,7 @@ export default function PromptGenerator({ prefill }) {
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h3 className="text-lg font-bold text-white">Generated Storyboards</h3>
-                <p className="text-xs text-gray-500 mt-1">Optimized for {selectedPlatformName}</p>
+                <p className="text-xs text-gray-500 mt-1">Multi-part prompts for {selectedPlatformName}</p>
               </div>
               {prompts.length > 1 && (
                 <button 
@@ -280,35 +334,160 @@ export default function PromptGenerator({ prefill }) {
               </div>
             ) : (
               <div className="space-y-6">
-                {prompts.map((prompt, idx) => (
-                  <motion.div
-                    key={idx}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="group p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-white/15 transition-all shadow-xl"
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center text-white text-sm font-bold mt-1 shadow-md">
-                        {idx + 1}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="space-y-1">
-                          {renderPromptText(prompt)}
+                {prompts.map((prompt, idx) => {
+                  const data = parseStoryboardText(prompt)
+                  const isFavorited = favorites.some(f => f.content === prompt)
+                  const keyPrefix = `prompt-${idx}`
+                  
+                  return (
+                    <motion.div
+                      key={idx}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: idx * 0.08 }}
+                      className="group p-6 rounded-2xl bg-black/40 border border-white/5 hover:border-white/15 transition-all shadow-xl flex flex-col gap-4 relative"
+                    >
+                      {/* Top Bar inside Card */}
+                      <div className="flex items-start justify-between border-b border-white/5 pb-3">
+                        <div className="flex items-center gap-3">
+                          <div className="shrink-0 w-8 h-8 rounded-full bg-gradient-to-br from-accent to-blue-600 flex items-center justify-center text-white text-sm font-bold shadow-md">
+                            {idx + 1}
+                          </div>
+                          <h4 className="text-base font-bold text-accent">
+                            {data?.title || 'Storyboard Sequence'}
+                          </h4>
                         </div>
-                        <div className="flex justify-end mt-4 pt-3 border-t border-white/5">
-                          <button 
-                            onClick={() => copyToClipboard(prompt, idx)}
-                            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/15 transition-colors text-xs font-medium text-gray-400 hover:text-white"
+                        
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => toggleFavorite(prompt, idx)}
+                            disabled={favoritingIdx === idx}
+                            className={`p-2 rounded-xl border transition-all ${
+                              isFavorited 
+                                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/30' 
+                                : 'bg-white/5 text-gray-400 border-white/10 hover:text-white hover:bg-white/10'
+                            }`}
+                            title={isFavorited ? 'Remove from favorites' : 'Save to favorites'}
                           >
-                            {copiedIdx === idx ? <CheckCircle size={13} className="text-green-400" /> : <Copy size={13} />}
-                            {copiedIdx === idx ? 'Copied Storyboard!' : 'Copy Storyboard'}
+                            <Star size={16} fill={isFavorited ? 'currentColor' : 'none'} />
+                          </button>
+                          
+                          <button 
+                            onClick={() => copyToClipboard(prompt, `${keyPrefix}-full`)}
+                            className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs font-medium text-gray-400 hover:text-white transition-all"
+                            title="Copy full storyboard script"
+                          >
+                            {copiedIdx === `${keyPrefix}-full` ? <CheckCircle size={13} className="text-green-400" /> : <Copy size={13} />}
+                            {copiedIdx === `${keyPrefix}-full` ? 'Copied Script!' : 'Copy Script'}
                           </button>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
+
+                      {/* Decoded Content Layout */}
+                      {data ? (
+                        <div className="space-y-4">
+                          <div>
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-blue-400/90 block mb-1">
+                              Visual Concept
+                            </span>
+                            <p className="text-sm text-gray-200 leading-relaxed bg-black/20 p-3.5 rounded-xl border border-white/5">
+                              {data.visualConcept}
+                            </p>
+                          </div>
+
+                          {data.cameraTrajectory && (
+                            <div className="flex items-center gap-2">
+                              <span className="text-[9px] font-bold text-purple-400 uppercase tracking-widest">Trajectory:</span>
+                              <span className="text-[10px] font-semibold bg-purple-500/20 text-purple-300 px-2 py-0.5 rounded border border-purple-500/20">
+                                {data.cameraTrajectory}
+                              </span>
+                            </div>
+                          )}
+
+                          {/* Dual Part Sequential Columns */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            {/* Part 1 */}
+                            <div className="p-4 rounded-xl bg-black/20 border border-white/5 flex flex-col justify-between gap-3">
+                              <div>
+                                <span className="text-xs font-bold text-accent">Part 1 (0s - 5s)</span>
+                                <div className="space-y-2 mt-2">
+                                  {data.part1.action && (
+                                    <div>
+                                      <span className="text-[9px] text-gray-500 uppercase">Action</span>
+                                      <p className="text-xs text-gray-300 mt-0.5">{data.part1.action}</p>
+                                    </div>
+                                  )}
+                                  {data.part1.camera && (
+                                    <div>
+                                      <span className="text-[9px] text-gray-500 uppercase">Camera</span>
+                                      <p className="text-xs text-gray-300 mt-0.5">{data.part1.camera}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {data.part1.prompt && (
+                                <button
+                                  onClick={() => copyToClipboard(data.part1.prompt, `${keyPrefix}-part1`)}
+                                  className="w-full py-2 px-3 rounded-lg bg-accent/10 hover:bg-accent/20 text-accent transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-accent/20"
+                                >
+                                  {copiedIdx === `${keyPrefix}-part1` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
+                                  {copiedIdx === `${keyPrefix}-part1` ? 'Copied Prompt 1!' : 'Copy Clip 1 Prompt'}
+                                </button>
+                              )}
+                            </div>
+
+                            {/* Part 2 */}
+                            <div className="p-4 rounded-xl bg-black/20 border border-white/5 flex flex-col justify-between gap-3">
+                              <div>
+                                <div className="flex items-center justify-between">
+                                  <span className="text-xs font-bold text-green-400">Part 2 (5s - 10s)</span>
+                                  <span className="text-[9px] bg-green-500/10 text-green-400 px-1 py-0.5 rounded border border-green-500/20">Seamless Continuation</span>
+                                </div>
+                                <div className="space-y-2 mt-2">
+                                  {data.part2.action && (
+                                    <div>
+                                      <span className="text-[9px] text-gray-500 uppercase">Action</span>
+                                      <p className="text-xs text-gray-300 mt-0.5">{data.part2.action}</p>
+                                    </div>
+                                  )}
+                                  {data.part2.camera && (
+                                    <div>
+                                      <span className="text-[9px] text-gray-500 uppercase">Camera</span>
+                                      <p className="text-xs text-gray-300 mt-0.5">{data.part2.camera}</p>
+                                    </div>
+                                  )}
+                                </div>
+                              </div>
+                              {data.part2.prompt && (
+                                <button
+                                  onClick={() => copyToClipboard(data.part2.prompt, `${keyPrefix}-part2`)}
+                                  className="w-full py-2 px-3 rounded-lg bg-green-600/10 hover:bg-green-600/20 text-green-400 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-green-500/20"
+                                >
+                                  {copiedIdx === `${keyPrefix}-part2` ? <CheckCircle size={12} className="text-green-400" /> : <Copy size={12} />}
+                                  {copiedIdx === `${keyPrefix}-part2` ? 'Copied Prompt 2!' : 'Copy Clip 2 Prompt'}
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {data.fluidEffects && (
+                            <div>
+                              <span className="text-[9px] font-bold text-yellow-400 uppercase tracking-widest">Fluid Animation:</span>
+                              <p className="text-xs text-gray-400 mt-0.5">{data.fluidEffects}</p>
+                            </div>
+                          )}
+                        </div>
+                      ) : (
+                        // Fallback line rendering
+                        <div className="space-y-1">
+                          {prompt.split('\n').map((line, lIdx) => (
+                            <p key={lIdx} className="text-gray-300 text-sm leading-relaxed">{line}</p>
+                          ))}
+                        </div>
+                      )}
+                    </motion.div>
+                  )
+                })}
               </div>
             )}
           </motion.div>
