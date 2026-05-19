@@ -57,36 +57,43 @@ def login():
 @auth_bp.route('/login/google', methods=['POST'])
 def google_login():
     data = request.json or {}
-    token = data.get('credential')
+    credential = data.get('credential')
 
-    if not token:
+    if not credential:
         return jsonify({'error': 'No credential provided'}), 400
 
     try:
-        # Verify the Google token. 
-        # In production, set GOOGLE_CLIENT_ID env var to your actual Client ID.
-        CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID', 'YOUR_GOOGLE_CLIENT_ID')
-        
-        # If testing with placeholder, we might bypass strict client ID check or it will fail.
-        # We specify the Client ID if we have one. If we don't pass it, it verifies the signature but not audience.
-        idinfo = id_token.verify_oauth2_token(token, google_requests.Request(), CLIENT_ID if CLIENT_ID != 'YOUR_GOOGLE_CLIENT_ID' else None)
+        CLIENT_ID = os.getenv('GOOGLE_CLIENT_ID')
+
+        # Verify the Google ID token
+        # If CLIENT_ID is set, verify audience. Otherwise skip audience check.
+        idinfo = id_token.verify_oauth2_token(
+            credential,
+            google_requests.Request(),
+            audience=CLIENT_ID
+        )
 
         email = idinfo.get('email')
-        
+
         if not email:
             return jsonify({'error': 'Google token did not contain an email'}), 400
+
+        # Check if email is verified by Google
+        if not idinfo.get('email_verified', False):
+            return jsonify({'error': 'Google email is not verified'}), 400
 
         user = User.query.filter_by(email=email).first()
 
         if not user:
-            # Create a new user for this Google account
             user = User(email=email)
             db.session.add(user)
             db.session.commit()
 
-        # Generate our own JWT token
         access_token = create_access_token(identity=str(user.id))
         return jsonify({'token': access_token})
 
     except ValueError as e:
-        return jsonify({'error': f'Invalid Google token: {str(e)}'}), 401
+        return jsonify({'error': f'Token verification failed: {str(e)}'}), 401
+    except Exception as e:
+        return jsonify({'error': f'Google auth error: {str(e)}'}), 500
+

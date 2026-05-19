@@ -55,7 +55,12 @@ export default function AuthPage() {
       navigate('/')
     } catch (err) {
       console.error('Google auth error', err)
-      setError(err.response?.data?.error || 'Google authentication failed. Please try again.')
+      const msg = err.response?.data?.error
+      if (err.response?.status === 0 || !err.response) {
+        setError('Cannot reach the server. Please check if the backend is running.')
+      } else {
+        setError(msg || `Google authentication failed (${err.response?.status}). Please try again.`)
+      }
     } finally {
       setLoading(false)
     }
