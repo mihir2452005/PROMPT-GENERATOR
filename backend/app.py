@@ -16,10 +16,13 @@ def create_app():
     # JWT secret must be provided in production via env `JWT_SECRET`
     app.config['JWT_SECRET_KEY'] = os.getenv('JWT_SECRET', 'dev-secret')
 
-    # CORS: allow both local dev and production origins
+    # CORS: allow frontend origins. Set FRONTEND_URL env to restrict in production.
     frontend_origin = os.getenv('FRONTEND_URL', '*')
-    origins = [o.strip() for o in frontend_origin.split(',')] if frontend_origin != '*' else '*'
-    CORS(app, resources={r"/*": {"origins": origins}}, supports_credentials=True)
+    if frontend_origin != '*':
+        origins = [o.strip() for o in frontend_origin.split(',')]
+    else:
+        origins = '*'
+    CORS(app, resources={r"/*": {"origins": origins, "allow_headers": ["Content-Type", "Authorization"]}})
     db.init_app(app)
     jwt.init_app(app)
 
