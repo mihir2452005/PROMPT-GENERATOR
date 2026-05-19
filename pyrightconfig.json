@@ -1,0 +1,7 @@
+{
+  "exclude": [
+    "**/node_modules",
+    "**/__pyrefly_virtual__",
+    "**/__pyrefly_virtual__/**"
+  ]
+}
