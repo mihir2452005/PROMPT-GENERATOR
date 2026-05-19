@@ -80,11 +80,11 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
         f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
         f"- **Action**: Cinematic close-up on the central details of {topic} as atmospheric {mood} light flares slowly pass across the lens.\n"
         f"- **Camera**: Smooth 3D gimbal tracking pan moving right to left.\n"
-        f"- **Meta AI/Engine Prompt**: `Cinematic tracking shot of {topic}, shallow depth of field, warm {mood} volumetric lighting, photorealistic --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: An epic, photorealistic cinematic close-up shot capturing {topic} illuminated by warm, sweeping volumetric {mood} light beams. Slow-moving light leaks and golden anamorphic lens flares slice elegantly across an ultra-high-definition 85mm camera lens. The atmosphere is filled with micro-fine floating dust motes glowing in the volumetric rays. Ultra-shallow depth of field, sharp textures, Unreal Engine 5 render style, 8k resolution, cinematic scale, high-end production --ar 16:9`\n"
         f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
         f"- **Action**: The camera pulls back dramatically, seamlessly revealing the entire glowing expanse of the setting under changing lighting transitions.\n"
         f"- **Camera**: Dynamic crane shot rising up and back, maintaining continuous subject focus.\n"
-        f"- **Meta AI/Engine Prompt**: `Dolly-out drone perspective, continuous flow from previous scene, {topic} fully revealed, deep shadows, cinematic scale --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following previous close-up shot. The camera dolly-outs smoothly in a grand sweeping crane motion to fully reveal {topic} standing majestically amidst an expansive, jaw-dropping cinematic landscape matching the powerful {mood} mood. The glowing sunset changes color dynamic in real-time, casting extremely long, detailed ray-traced shadows across the damp ground. Photorealistic, 8k resolution, IMAX ratio --ar 16:9`\n"
         f"**Fluid Effects**: Volumetric clouds, raytraced reflections.",
 
         f"🎬 **Storyboard: The Micro & Macro Focus**\n"
@@ -93,11 +93,11 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
         f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
         f"- **Action**: Extreme close-up of {topic} surfaces, catching soft circular light rays bouncing off organic edges.\n"
         f"- **Camera**: Slow, delicate forward push along the Z-axis.\n"
-        f"- **Meta AI/Engine Prompt**: `Macro lens close up of {topic}, soft {mood} mood, bokeh reflections, highly detailed, slow slide --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A breathtaking extreme macro focus-pull shot exploring the hyper-detailed fine surface textures of {topic} with absolute precision. The soft ambient lighting glows with a serene {mood} aesthetic, creating gorgeous, soft circular bokeh reflections in the background. The camera moves forward delicately on a microscopic scale, highlighting crisp edges, complex material patterns, and soft chromatic aberration. Photorealistic, ray-traced ambient occlusion, masterfully detailed, 8k resolution --ar 16:9`\n"
         f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
         f"- **Action**: Focus smoothly shifts from the front texture to reveal a larger moving subject or water droplet sliding off {topic}.\n"
         f"- **Camera**: Slow focal transition with a gentle camera rotation.\n"
-        f"- **Meta AI/Engine Prompt**: `Macro focus-pull on {topic}, glowing liquid droplet sliding down, dramatic shadows, HSL color grade --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence continuing the previous macro shot. The focus pulls smoothly backward to reveal a crystal-clear, highly detailed water droplet sliding elegantly down the surface of {topic}. The droplet refracts the colorful {mood} sky beautifully, and leaves a glistening wet trail behind it with realistic fluid physics. The camera orbits gently with 360-degree rotation. Super slow-motion, liquid physics simulation, hyper-realistic, 8k resolution --ar 16:9`\n"
         f"**Fluid Effects**: Water droplet simulation, cinematic focus-pull.",
 
         f"🎬 **Storyboard: The Atmospheric Transition**\n"
@@ -106,11 +106,11 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
         f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
         f"- **Action**: The scene starts with {topic} shrouded in deep, heavy {mood} shadows, mist swirling at the base.\n"
         f"- **Camera**: Static locked-off composition with subtle camera vibrations.\n"
-        f"- **Meta AI/Engine Prompt**: `Atmospheric moody shot of {topic} covered in dense mist, misty shadows, realistic physics, dark cinematic style --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: An atmospheric, dark cinematic shot showing {topic} shrouded in heavy, dense, volumetric {mood} fog and swirling low-lying mist. The locked-off tripod camera captures subtle environmental wind vibrations, making the mist twist and curl realistically around the base of {topic}. Shadowy, moody lighting highlights fine moisture textures on the surface. Hyper-realistic fog physics, volumetric illumination, 8k resolution, cinematic masterpiece --ar 16:9`\n"
         f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
         f"- **Action**: Mist begins to thin rapidly as powerful glowing light rays pierce through the clouds, lighting up {topic}.\n"
         f"- **Camera**: Slow tracking dolly-in through the thinning haze.\n"
-        f"- **Meta AI/Engine Prompt**: `Cinematic dolly through mist, dramatic light beams revealing {topic}, dynamic weather, particles in light --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous atmospheric shot. The dense mist begins to thin rapidly as dramatic, bright volumetric god-rays pierce through dark clouds, dynamically illuminating {topic} with brilliant glowing highlights. The camera tracks forward in a slow, elegant dolly motion through the vanishing haze, capturing millions of glowing airborne moisture particles. Dynamic atmospheric weather simulation, cinematic masterpiece, 8k resolution --ar 16:9`\n"
         f"**Fluid Effects**: Realistic mist simulation, particle wind.",
 
         f"🎬 **Storyboard: The Dynamic Action Run**\n"
@@ -119,11 +119,11 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
         f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
         f"- **Action**: Energetic movement begins instantly, sparks and dust flying off {topic} as it animates into action.\n"
         f"- **Camera**: Fast tracking shot moving horizontally.\n"
-        f"- **Meta AI/Engine Prompt**: `Action tracking shot of {topic} moving fast, glowing sparks flying behind, high speed action, cinematic --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A high-speed, dynamic tracking shot running alongside {topic} as it bursts into powerful, high-energy action. Glowing orange sparks, concrete dust, and atmospheric debris fly off {topic} in all directions, captured with realistic motion blur and high velocity. The scene is illuminated by dramatic neon {mood} spotlights in a dark industrial warehouse. Hyper-realistic particle physics, high-speed camera, 8k resolution, IMAX aspect ratio --ar 16:9`\n"
         f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
         f"- **Action**: A sudden slow-motion drop where all sparks freeze in the air in bullet-time around {topic}.\n"
         f"- **Camera**: Orbiting 360-degree rotational camera movement in super slow motion.\n"
-        f"- **Meta AI/Engine Prompt**: `Super slow motion bullet-time orbit of {topic}, frozen glowing particles in mid-air, 3D rotating angle, photorealistic --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous high-speed tracking shot. The high-speed action instantly drops into a super slow-motion bullet-time sequence. The glowing sparks and debris freeze in mid-air in a perfect floating sphere around {topic}. The camera orbits in a smooth, high-fidelity 360-degree rotation showing the dynamic depth of the frozen particles. Photorealistic, 8k resolution, cinematic masterpiece --ar 16:9`\n"
         f"**Fluid Effects**: High-speed particle system, custom bullet-time simulation.",
 
         f"🎬 **Storyboard: The Cinematic Horizon**\n"
@@ -132,11 +132,11 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
         f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
         f"- **Action**: Close silhouette of {topic} resting against a gorgeous, sweeping gradient background of {mood} sky.\n"
         f"- **Camera**: Slow, rhythmic vertical crane rising upwards.\n"
-        f"- **Meta AI/Engine Prompt**: `Low angle silhouette of {topic}, glowing colorful sky, cinematic gradients, peaceful HSL colors, majestic crane shot --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A low-angle close-up silhouette shot of {topic} resting peacefully against an expansive, gorgeous background sky painted in cinematic, gradient HSL colors of {mood}. The camera rises vertically in a slow, highly rhythmic crane motion, capturing majestic volumetric light leaks that shimmer dynamically. Anamorphic lens flare, photorealistic, 8k resolution, cinematic aesthetic --ar 16:9`\n"
         f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
         f"- **Action**: The camera reaches the peak of the crane, fully capturing a breathtaking sunset/sunrise casting long gold shadows across the horizon.\n"
         f"- **Camera**: Slow, elegant panning shot towards the sun.\n"
-        f"- **Meta AI/Engine Prompt**: `Cinematic sunset panning shot, golden hours, {topic} in landscape silhouette, long shadows, perfect lens flare --ar 16:9`\n"
+        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous crane shot. The camera reaches the peak of its crane height, smoothly transitioning into a slow, elegant panning shot facing the blinding glowing sun over the horizon. The horizon casts a warm golden hue over the entire setting, creating long, beautifully detailed shadows. Cinematic lens flare, atmospheric haze, photorealistic, 8k resolution --ar 16:9`\n"
         f"**Fluid Effects**: Golden lens flares, atmospheric dust."
     ]
 
@@ -168,10 +168,11 @@ Each of the {count} prompts in the JSON list MUST follow this exact, rich format
 
 CRITICAL QUALITY REQUIREMENTS FOR PROMPTS INSIDE THE BACKTICKS:
 1. The text inside the backticks (`-[Platform Name] Prompt`) is what the user copies directly into the AI video engine.
-2. It MUST be an extremely detailed, long, and highly descriptive paragraph (at least 45-75 words).
-3. Do NOT make it short or use simple placeholders. Instead, synthesize a gorgeous, professional video generation instruction complete with lighting details (like volumetric rays, ambient occlusion, anamorphic flare), lens specs (macro, anamorphic, 85mm), material textures, atmospheric conditions, and precise physical motion dynamics.
-4. Make the Part 2 prompt explicitly mention: "continuous video sequence following previous scene seamlessly, maintaining identical subject, lighting, and style parameters". This ensures perfect video engine continuation!
-5. **Strict Trigger Rule for Meta AI**: If the platform is Meta AI (Imagine), the text inside the backticks **MUST** start with the prefix `Imagine a video of: ` (e.g. `Imagine a video of: a detailed cinematic sequence showing...`). This is a strict functional mandate; without the word "video" in the primary phrase "Imagine a video of", Meta AI defaults to producing a static image instead of a moving clip. Prepending "Imagine a video of: " forces instant direct video execution perfectly!
+2. It MUST be an extremely detailed, immersive, and highly descriptive paragraph of 90 to 150 words.
+3. Make it a photorealistic cinematic masterpiece. Detail exact physical textures, volumetric global lighting, ray-traced shadows, complex physics simulations, lens details (anamorphic flare, shallow depth of field, 8k resolution, IMAX cinematic aspect ratio), and weather/atmospheric conditions.
+4. Use rich adjectives and active verbs that Meta AI can easily parse to generate high-fidelity, fluid video clips.
+5. Make the Part 2 prompt explicitly mention: "continuous video sequence following previous scene seamlessly, maintaining identical subject, lighting, and style parameters". This ensures perfect video engine continuation!
+6. **Strict Trigger Rule for Meta AI**: If the platform is Meta AI (Imagine), the text inside the backticks **MUST** start with the prefix `Imagine a video of: ` (e.g. `Imagine a video of: a detailed cinematic sequence showing...`). This is a strict functional mandate; without the word "video" in the primary phrase "Imagine a video of", Meta AI defaults to producing a static image instead of a moving clip. Prepending "Imagine a video of: " forces instant direct video execution perfectly!
 
 IMPORTANT: You must return ONLY a valid JSON array of exactly {count} strings. Do NOT include markdown around the JSON, do NOT output code block formatting (like ```json), and do not add any conversational text. Return only the raw JSON array of strings so that it can be parsed perfectly by `json.loads`.
 
@@ -181,7 +182,7 @@ Example output format:
   "..."
 ]"""
 
-    user_prompt = f"Generate {count} unique, highly cinematic, 2-Part continuous video prompts about \"{topic}\" with a powerful \"{mood}\" mood/atmosphere. Ensure the prompts are long, highly descriptive, and optimized for {platform_info['name']}."
+    user_prompt = f"Generate {count} unique, highly cinematic, 2-Part continuous video prompts about \"{topic}\" with a powerful \"{mood}\" mood/atmosphere. Ensure the prompts are extremely long, highly descriptive, photorealistic masterpieces, and optimized for {platform_info['name']}."
 
     try:
         response = client.chat.completions.create(
