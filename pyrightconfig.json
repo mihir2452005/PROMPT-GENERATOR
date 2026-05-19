@@ -4,6 +4,11 @@
     "**/__pyrefly_virtual__",
     "**/__pyrefly_virtual__/**"
   ],
+  "executionEnvironments": [
+    {
+      "root": "."
+    }
+  ],
   "extraPaths": [
     "."
   ]
