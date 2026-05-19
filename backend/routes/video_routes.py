@@ -4,6 +4,7 @@ import os
 import base64
 from huggingface_hub import InferenceClient
 
+# Trigger local diagnostic cache refresh
 video_bp = Blueprint('video', __name__)
 
 @video_bp.route('/generate-video', methods=['POST'])
