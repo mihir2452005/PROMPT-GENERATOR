@@ -7,7 +7,7 @@ PLATFORM_GUIDES = {
     'meta_ai': {
         'name': 'Meta AI (Imagine)',
         'style': 'highly descriptive visual sequences, cinematic framing, photo-realistic rendering, and dynamic lighting modifiers.',
-        'example_prefix': 'A cinematic video sequence of'
+        'example_prefix': 'Animate: a detailed cinematic video sequence of'
     },
     'runway': {
         'name': 'Runway Gen-3',
@@ -45,6 +45,23 @@ PLATFORM_GUIDES = {
         'example_prefix': 'Cinematic video of'
     }
 }
+
+def ensure_meta_ai_prefix(prompts, platform):
+    if platform == 'meta_ai':
+        processed = []
+        for p in prompts:
+            # Prepend Animate: prefix inside backticks for Meta AI
+            p_new = p.replace("- **Meta AI (Imagine) Prompt**: `", "- **Meta AI (Imagine) Prompt**: `Animate: ")
+            p_new = p_new.replace("- **Meta AI/Engine Prompt**: `", "- **Meta AI/Engine Prompt**: `Animate: ")
+            
+            # Clean redundant duplicates
+            p_new = p_new.replace("`Animate: Animate: ", "`Animate: ")
+            p_new = p_new.replace("`Animate: Animate ", "`Animate: ")
+            p_new = p_new.replace("`Animate: animate: ", "`Animate: ")
+            p_new = p_new.replace("`Animate: animate ", "`Animate: ")
+            processed.append(p_new)
+        return processed
+    return prompts
 
 def generate_ai_prompts(topic, mood, platform='general', count=5):
     """Generate multiple high-quality, story-driven, timeline-based video scripts optimized for a specific platform."""
@@ -120,7 +137,7 @@ def generate_ai_prompts(topic, mood, platform='general', count=5):
     ]
 
     if not api_key:
-        return fallback_prompts[:count]
+        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
 
     client = OpenAI(api_key=api_key)
 
@@ -150,6 +167,7 @@ CRITICAL QUALITY REQUIREMENTS FOR PROMPTS INSIDE THE BACKTICKS:
 2. It MUST be an extremely detailed, long, and highly descriptive paragraph (at least 45-75 words).
 3. Do NOT make it short or use simple placeholders. Instead, synthesize a gorgeous, professional video generation instruction complete with lighting details (like volumetric rays, ambient occlusion, anamorphic flare), lens specs (macro, anamorphic, 85mm), material textures, atmospheric conditions, and precise physical motion dynamics.
 4. Make the Part 2 prompt explicitly mention: "continuous video sequence following previous scene seamlessly, maintaining identical subject, lighting, and style parameters". This ensures perfect video engine continuation!
+5. **Strict Trigger Rule for Meta AI**: If the platform is Meta AI (Imagine), the text inside the backticks **MUST** start with the prefix word `Animate: ` (e.g. `Animate: a detailed cinematic video of...`). This prefix is a strict functional mandate; without it, Meta AI defaults to producing static images rather than direct videos. Forcing the prefix word `Animate: ` ensures instant video generation!
 
 IMPORTANT: You must return ONLY a valid JSON array of exactly {count} strings. Do NOT include markdown around the JSON, do NOT output code block formatting (like ```json), and do not add any conversational text. Return only the raw JSON array of strings so that it can be parsed perfectly by `json.loads`.
 
@@ -187,7 +205,7 @@ Example output format:
         try:
             prompts = json.loads(content)
             if isinstance(prompts, list) and len(prompts) > 0:
-                return prompts[:count]
+                return ensure_meta_ai_prefix(prompts[:count], platform)
         except json.JSONDecodeError:
             pass
 
@@ -201,7 +219,7 @@ Example output format:
                 prompts.append('🎬 ' + part_str)
 
         if len(prompts) >= count:
-            return prompts[:count]
+            return ensure_meta_ai_prefix(prompts[:count], platform)
         
         # Fallback to the parsed lines method
         lines = [line.strip() for line in content.split('\n') if line.strip()]
@@ -218,14 +236,14 @@ Example output format:
         
         valid_prompts = [p for p in temp_prompts if len(p.strip()) > 100]
         if len(valid_prompts) > 0:
-            return valid_prompts[:count]
+            return ensure_meta_ai_prefix(valid_prompts[:count], platform)
 
         # Last resort: return the fallback prompts so user gets a pristine 5-card experience
-        return fallback_prompts[:count]
+        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
 
     except Exception as e:
         # Fallback on any error to ensure uninterrupted high-quality user experience
-        return fallback_prompts[:count]
+        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
 
 def get_supported_platforms():
     """Return list of supported platforms for the frontend dropdown."""
