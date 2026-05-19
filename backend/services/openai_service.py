@@ -196,3 +196,11 @@ Example output format:
     except Exception as e:
         # Fallback on any error to ensure uninterrupted high-quality user experience
         return fallback_prompts[:count]
+
+def get_supported_platforms():
+    """Return list of supported platforms for the frontend dropdown."""
+    return [
+        {'id': key, 'name': info['name']}
+        for key, info in PLATFORM_GUIDES.items()
+    ]
+

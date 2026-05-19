@@ -1,9 +1,9 @@
 from flask import Flask
 from flask_cors import CORS
-from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 import os
 from dotenv import load_dotenv
+from backend.extensions import db
 
 # Load environment variables from .env files in root or backend directories
 current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -12,8 +12,8 @@ load_dotenv(os.path.join(parent_dir, '.env'))
 load_dotenv(os.path.join(current_dir, '.env'))
 load_dotenv()
 
-db = SQLAlchemy()
 jwt = JWTManager()
+
 
 def create_app():
     app = Flask(__name__)

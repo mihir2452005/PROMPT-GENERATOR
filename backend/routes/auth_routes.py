@@ -5,7 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 import os
-from backend.app import db
+from backend.extensions import db
 from backend.models.user import User
 
 auth_bp = Blueprint('auth', __name__)
