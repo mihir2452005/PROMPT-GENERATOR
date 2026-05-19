@@ -139,6 +139,18 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     }
   }
 
+  const [showMetaAICopilot, setShowMetaAICopilot] = useState(false)
+  const [copilotPromptText, setCopilotPromptText] = useState('')
+  const [copilotClipName, setCopilotClipName] = useState('')
+
+  const handleLaunchMetaAICopilot = (promptText, clipName) => {
+    navigator.clipboard.writeText(promptText)
+    setCopilotPromptText(promptText)
+    setCopilotClipName(clipName)
+    setShowMetaAICopilot(true)
+    window.open('https://meta.ai', '_blank')
+  }
+
   const [generatingVideoKey, setGeneratingVideoKey] = useState(null)
   const [generatedVideos, setGeneratedVideos] = useState({})
   const [compilingErrors, setCompilingErrors] = useState({})
@@ -495,6 +507,15 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                     </button>
                                   )}
 
+                                  {/* Compile with Meta AI Button */}
+                                  <button
+                                    onClick={() => handleLaunchMetaAICopilot(data.part1.prompt, "Clip 1")}
+                                    className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 hover:from-blue-500/30 hover:via-purple-500/30 hover:to-pink-500/30 text-white hover:text-cyan-200 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-purple-500/30 shadow-md shadow-purple-500/5 mt-1"
+                                  >
+                                    <Sparkles size={12} className="text-purple-400 animate-pulse" />
+                                    Compile with Meta AI (Free)
+                                  </button>
+
                                   {generatingVideoKey === `${keyPrefix}-part1` && (
                                     <div className="p-3 rounded-lg border border-accent/20 bg-accent/5 flex flex-col gap-2 mt-1.5 animate-pulse">
                                       <div className="flex items-center gap-2 text-[11px] font-bold text-accent">
@@ -590,6 +611,15 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                     </button>
                                   )}
 
+                                  {/* Compile with Meta AI Button */}
+                                  <button
+                                    onClick={() => handleLaunchMetaAICopilot(data.part2.prompt, "Clip 2")}
+                                    className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 hover:from-blue-500/30 hover:via-purple-500/30 hover:to-pink-500/30 text-white hover:text-cyan-200 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-purple-500/30 shadow-md shadow-purple-500/5 mt-1"
+                                  >
+                                    <Sparkles size={12} className="text-purple-400 animate-pulse" />
+                                    Compile with Meta AI (Free)
+                                  </button>
+
                                   {generatingVideoKey === `${keyPrefix}-part2` && (
                                     <div className="p-3 rounded-lg border border-green-500/20 bg-green-500/5 flex flex-col gap-2 mt-1.5 animate-pulse">
                                       <div className="flex items-center gap-2 text-[11px] font-bold text-green-400">
@@ -639,6 +669,83 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                 })}
               </div>
             )}
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Meta AI Co-Pilot Panel */}
+      <AnimatePresence>
+        {showMetaAICopilot && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-md bg-gradient-to-b from-gray-900 to-black border border-white/10 rounded-2xl p-6 shadow-2xl relative overflow-hidden text-left"
+            >
+              {/* Glow effects */}
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-pink-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              {/* Pulsing Meta AI Logo/Ring */}
+              <div className="flex flex-col items-center text-center mt-2 mb-6">
+                <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 animate-[spin_8s_linear_infinite] mb-4 shadow-lg shadow-purple-500/20">
+                  <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
+                    <Sparkles size={24} className="text-transparent bg-clip-text bg-gradient-to-tr from-blue-400 to-pink-400 animate-pulse" />
+                  </div>
+                </div>
+                <h3 className="text-lg font-extrabold text-white tracking-tight">Meta AI Co-Pilot Active</h3>
+                <p className="text-xs text-gray-400 mt-1">Generating free high-definition video for {copilotClipName}</p>
+              </div>
+
+              {/* Step List */}
+              <div className="space-y-4 mb-6">
+                <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-green-500/10 border border-green-500/20 flex items-center justify-center text-green-400 text-xs font-bold shrink-0 mt-0.5">1</div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Prompt Copied to Clipboard! 📋</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Your optimized storyboard prompt has been automatically copied.</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-500/10 border border-blue-500/20 flex items-center justify-center text-blue-400 text-xs font-bold shrink-0 mt-0.5">2</div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Meta AI Web Opened 🚀</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">We opened `meta.ai` in a separate tab or window for you.</p>
+                  </div>
+                </div>
+
+                <div className="p-3 bg-white/5 rounded-xl border border-white/5 flex items-start gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 text-xs font-bold shrink-0 mt-0.5">3</div>
+                  <div>
+                    <p className="text-xs font-bold text-white">Paste & Compile (Free) 🎬</p>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Right-click the Meta AI text input, choose Paste (Ctrl+V), and hit Enter to generate beautiful animations instantly!</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="flex gap-2">
+                <button
+                  onClick={() => window.open('https://meta.ai', '_blank')}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-white font-bold text-xs transition-all border border-white/10 flex items-center justify-center gap-1.5"
+                >
+                  Re-open Meta AI
+                </button>
+                <button
+                  onClick={() => setShowMetaAICopilot(false)}
+                  className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-bold text-xs transition-all shadow-md shadow-purple-500/20 flex items-center justify-center"
+                >
+                  Done, I'm Back!
+                </button>
+              </div>
+            </motion.div>
           </motion.div>
         )}
       </AnimatePresence>
