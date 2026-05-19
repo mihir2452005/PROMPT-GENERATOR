@@ -4,7 +4,8 @@ services:
     env: python
     plan: free
     branch: main
-    buildCommand: pip install -r backend/requirements.txt
+    root: backend
+    buildCommand: pip install -r requirements.txt
     startCommand: gunicorn "app:app" --bind 0.0.0.0:$PORT
     envVars:
       - key: DATABASE_URL
@@ -15,8 +16,9 @@ services:
     env: static
     plan: free
     branch: main
-    buildCommand: cd frontend && npm ci && npm run build
-    publishPath: frontend/dist
+    root: frontend
+    buildCommand: npm ci && npm run build
+    publishPath: dist
 
 databases:
   - name: metaprompt-db
