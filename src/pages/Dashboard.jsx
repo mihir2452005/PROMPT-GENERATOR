@@ -40,23 +40,7 @@ export default function Dashboard() {
         <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-blue-600/10 blur-[120px]" />
       </div>
 
-      <div className="relative max-w-7xl mx-auto px-6 py-12 flex flex-col">
-        {/* Header Navigation */}
-        <div className="flex items-center justify-between mb-16 border-b border-white/5 pb-6">
-          <div className="flex items-center gap-2">
-            <span className="text-xl font-black tracking-tighter bg-gradient-to-r from-white via-accent to-blue-400 bg-clip-text text-transparent">
-              MetaPrompt
-            </span>
-          </div>
-          
-          <button 
-            onClick={logout}
-            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/15 border border-white/10 hover:border-red-500/25 transition-all text-xs font-semibold text-gray-400 hover:text-red-400 active:scale-[0.98]"
-          >
-            <LogOut size={14} />
-            Sign Out
-          </button>
-        </div>
+      <div className="relative max-w-7xl mx-auto px-6 pt-24 pb-12 flex flex-col">
 
         {/* Dashboard Title */}
         <motion.div 

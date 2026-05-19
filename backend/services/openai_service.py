@@ -145,6 +145,12 @@ Each of the {count} prompts in the JSON list MUST follow this exact, rich format
 - **{platform_info['name']} Prompt**: `[continuous action prompt, seamless flow from previous scene, final climax, specific platform settings]`
 **Fluid Effects**: [Fluid dynamics, glowing particles, wind effects, material transformations, or lighting shifts to animate the scene]
 
+CRITICAL QUALITY REQUIREMENTS FOR PROMPTS INSIDE THE BACKTICKS:
+1. The text inside the backticks (`-[Platform Name] Prompt`) is what the user copies directly into the AI video engine.
+2. It MUST be an extremely detailed, long, and highly descriptive paragraph (at least 45-75 words).
+3. Do NOT make it short or use simple placeholders. Instead, synthesize a gorgeous, professional video generation instruction complete with lighting details (like volumetric rays, ambient occlusion, anamorphic flare), lens specs (macro, anamorphic, 85mm), material textures, atmospheric conditions, and precise physical motion dynamics.
+4. Make the Part 2 prompt explicitly mention: "continuous video sequence following previous scene seamlessly, maintaining identical subject, lighting, and style parameters". This ensures perfect video engine continuation!
+
 IMPORTANT: You must return ONLY a valid JSON array of exactly {count} strings. Do NOT include markdown around the JSON, do NOT output code block formatting (like ```json), and do not add any conversational text. Return only the raw JSON array of strings so that it can be parsed perfectly by `json.loads`.
 
 Example output format:
