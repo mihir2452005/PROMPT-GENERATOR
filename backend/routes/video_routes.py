@@ -4,7 +4,7 @@ import os
 import base64
 from huggingface_hub import InferenceClient
 
-video_bp = Blueprint('video', __name__, url_prefix='/api')
+video_bp = Blueprint('video', __name__)
 
 @video_bp.route('/generate-video', methods=['POST'])
 @jwt_required()
