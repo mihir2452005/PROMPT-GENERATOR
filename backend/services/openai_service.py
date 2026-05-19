@@ -7,7 +7,7 @@ PLATFORM_GUIDES = {
     'meta_ai': {
         'name': 'Meta AI (Imagine)',
         'style': 'highly descriptive visual sequences, cinematic framing, photo-realistic rendering, and dynamic lighting modifiers.',
-        'example_prefix': 'Animate: a detailed cinematic video sequence of'
+        'example_prefix': 'Imagine a video of: a detailed cinematic sequence showing'
     },
     'runway': {
         'name': 'Runway Gen-3',
@@ -50,15 +50,19 @@ def ensure_meta_ai_prefix(prompts, platform):
     if platform == 'meta_ai':
         processed = []
         for p in prompts:
-            # Prepend Animate: prefix inside backticks for Meta AI
-            p_new = p.replace("- **Meta AI (Imagine) Prompt**: `", "- **Meta AI (Imagine) Prompt**: `Animate: ")
-            p_new = p_new.replace("- **Meta AI/Engine Prompt**: `", "- **Meta AI/Engine Prompt**: `Animate: ")
+            # Prepend Imagine a video of: prefix inside backticks for Meta AI
+            p_new = p.replace("- **Meta AI (Imagine) Prompt**: `", "- **Meta AI (Imagine) Prompt**: `Imagine a video of: ")
+            p_new = p_new.replace("- **Meta AI/Engine Prompt**: `", "- **Meta AI/Engine Prompt**: `Imagine a video of: ")
             
-            # Clean redundant duplicates
-            p_new = p_new.replace("`Animate: Animate: ", "`Animate: ")
-            p_new = p_new.replace("`Animate: Animate ", "`Animate: ")
-            p_new = p_new.replace("`Animate: animate: ", "`Animate: ")
-            p_new = p_new.replace("`Animate: animate ", "`Animate: ")
+            # Clean redundant duplicates and old prefixes
+            p_new = p_new.replace("`Imagine a video of: Imagine a video of: ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: Imagine a video of ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: imagine a video of: ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: imagine a video of ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: Animate: ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: Animate ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: animate: ", "`Imagine a video of: ")
+            p_new = p_new.replace("`Imagine a video of: animate ", "`Imagine a video of: ")
             processed.append(p_new)
         return processed
     return prompts
@@ -167,7 +171,7 @@ CRITICAL QUALITY REQUIREMENTS FOR PROMPTS INSIDE THE BACKTICKS:
 2. It MUST be an extremely detailed, long, and highly descriptive paragraph (at least 45-75 words).
 3. Do NOT make it short or use simple placeholders. Instead, synthesize a gorgeous, professional video generation instruction complete with lighting details (like volumetric rays, ambient occlusion, anamorphic flare), lens specs (macro, anamorphic, 85mm), material textures, atmospheric conditions, and precise physical motion dynamics.
 4. Make the Part 2 prompt explicitly mention: "continuous video sequence following previous scene seamlessly, maintaining identical subject, lighting, and style parameters". This ensures perfect video engine continuation!
-5. **Strict Trigger Rule for Meta AI**: If the platform is Meta AI (Imagine), the text inside the backticks **MUST** start with the prefix word `Animate: ` (e.g. `Animate: a detailed cinematic video of...`). This prefix is a strict functional mandate; without it, Meta AI defaults to producing static images rather than direct videos. Forcing the prefix word `Animate: ` ensures instant video generation!
+5. **Strict Trigger Rule for Meta AI**: If the platform is Meta AI (Imagine), the text inside the backticks **MUST** start with the prefix `Imagine a video of: ` (e.g. `Imagine a video of: a detailed cinematic sequence showing...`). This is a strict functional mandate; without the word "video" in the primary phrase "Imagine a video of", Meta AI defaults to producing a static image instead of a moving clip. Prepending "Imagine a video of: " forces instant direct video execution perfectly!
 
 IMPORTANT: You must return ONLY a valid JSON array of exactly {count} strings. Do NOT include markdown around the JSON, do NOT output code block formatting (like ```json), and do not add any conversational text. Return only the raw JSON array of strings so that it can be parsed perfectly by `json.loads`.
 
