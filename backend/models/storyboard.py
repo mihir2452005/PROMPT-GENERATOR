@@ -1,6 +1,6 @@
 
 from backend.extensions import db
-from datetime import datetime
+from datetime import datetime, timezone
 
 class SavedStoryboard(db.Model):
     __tablename__ = 'saved_storyboard'
@@ -10,7 +10,7 @@ class SavedStoryboard(db.Model):
     mood = db.Column(db.String(255))
     platform = db.Column(db.String(50))
     content = db.Column(db.Text, nullable=False)
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __init__(self, user_id: int, topic: str, mood: str, platform: str, content: str):
         self.user_id = user_id
@@ -37,7 +37,7 @@ class QueryHistory(db.Model):
     topic = db.Column(db.String(255))
     mood = db.Column(db.String(255))
     platform = db.Column(db.String(50))
-    created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
 
     def __init__(self, user_id: int, topic: str, mood: str, platform: str):
         self.user_id = user_id

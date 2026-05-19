@@ -24,12 +24,12 @@ def generate():
         from flask_jwt_extended import get_jwt_identity
         from backend.extensions import db
         from backend.models.storyboard import QueryHistory
-        from datetime import datetime
+        from datetime import datetime, timezone
 
         user_id = int(get_jwt_identity())
         existing = QueryHistory.query.filter_by(user_id=user_id, topic=topic, mood=mood, platform=platform).first()
         if existing:
-            existing.created_at = datetime.utcnow()
+            existing.created_at = datetime.now(timezone.utc)
         else:
             new_history = QueryHistory(user_id=user_id, topic=topic, mood=mood, platform=platform)
             db.session.add(new_history)

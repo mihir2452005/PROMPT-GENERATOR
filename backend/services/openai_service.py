@@ -194,7 +194,8 @@ Example output format:
             max_tokens=3500
         )
 
-        content = response.choices[0].message.content.strip()
+        raw_content = response.choices[0].message.content
+        content = raw_content.strip() if raw_content else ""
         
         # Strip code blocks if OpenAI returns them despite instructions
         if content.startswith('```json'):

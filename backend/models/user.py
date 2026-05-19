@@ -4,6 +4,6 @@ class User(db.Model):
     email = db.Column(db.String(255), unique=True)
     password = db.Column(db.String(255))
 
-    def __init__(self, email: str, password: str = None):
+    def __init__(self, email: str, password: any = None):
         self.email = email
         self.password = password
