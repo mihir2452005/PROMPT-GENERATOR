@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Loader2, AlertCircle, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star, Play, Video } from 'lucide-react'
+import { Sparkles, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
@@ -151,30 +151,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     window.open('https://meta.ai', '_blank')
   }
 
-  const [generatingVideoKey, setGeneratingVideoKey] = useState(null)
-  const [generatedVideos, setGeneratedVideos] = useState({})
-  const [compilingErrors, setCompilingErrors] = useState({})
 
-  const triggerVideoGeneration = async (promptText, key) => {
-    setGeneratingVideoKey(key)
-    setCompilingErrors(prev => ({ ...prev, [key]: null }))
-    try {
-      const res = await api.post('/generate-video', { prompt: promptText })
-      setGeneratedVideos(prev => ({
-        ...prev,
-        [key]: res.data.videoUrl
-      }))
-    } catch (err) {
-      console.error('Video compile error:', err)
-      const errMsg = err.response?.data?.error || "Failed to generate video. Hugging Face WaveSpeed serverless provider is currently compiling or busy. Please try again in a few seconds."
-      setCompilingErrors(prev => ({
-        ...prev,
-        [key]: errMsg
-      }))
-    } finally {
-      setGeneratingVideoKey(null)
-    }
-  }
 
   const parseStoryboardText = (text) => {
     if (!text) return null
@@ -472,74 +449,14 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                     {copiedIdx === `${keyPrefix}-part1` ? 'Copied Prompt 1!' : 'Copy Clip 1 Prompt'}
                                   </button>
 
-                                  {generatedVideos[`${keyPrefix}-part1`] ? (
-                                    <div className="rounded-xl overflow-hidden border border-accent/20 bg-black/40 shadow-inner mt-1">
-                                      <video 
-                                        src={generatedVideos[`${keyPrefix}-part1`]} 
-                                        controls 
-                                        autoPlay 
-                                        loop 
-                                        muted 
-                                        className="w-full h-auto object-cover max-h-36"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => triggerVideoGeneration(data.part1.prompt, `${keyPrefix}-part1`)}
-                                      disabled={generatingVideoKey !== null}
-                                      className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
-                                        generatingVideoKey === `${keyPrefix}-part1`
-                                          ? 'bg-accent/20 text-accent animate-pulse border-accent/30'
-                                          : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
-                                      }`}
-                                    >
-                                      {generatingVideoKey === `${keyPrefix}-part1` ? (
-                                        <>
-                                          <Loader2 size={12} className="animate-spin text-accent" />
-                                          Compiling Video...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Play size={12} />
-                                          Compile Video 1
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-
                                   {/* Compile with Meta AI Button */}
                                   <button
                                     onClick={() => handleLaunchMetaAICopilot(data.part1.prompt, "Clip 1")}
-                                    className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 hover:from-blue-500/30 hover:via-purple-500/30 hover:to-pink-500/30 text-white hover:text-cyan-200 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-purple-500/30 shadow-md shadow-purple-500/5 mt-1"
+                                    className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 text-white hover:text-cyan-200 transition-all text-xs font-extrabold flex items-center justify-center gap-2 border border-purple-500/40 shadow-lg shadow-purple-500/10 mt-1"
                                   >
-                                    <Sparkles size={12} className="text-purple-400 animate-pulse" />
+                                    <Sparkles size={14} className="text-purple-300 animate-pulse" />
                                     Compile with Meta AI (Free)
                                   </button>
-
-                                  {generatingVideoKey === `${keyPrefix}-part1` && (
-                                    <div className="p-3 rounded-lg border border-accent/20 bg-accent/5 flex flex-col gap-2 mt-1.5 animate-pulse">
-                                      <div className="flex items-center gap-2 text-[11px] font-bold text-accent">
-                                        <Loader2 size={12} className="animate-spin" />
-                                        <span>AI Video Engine is compiling Clip 1...</span>
-                                      </div>
-                                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                                        <div className="bg-accent h-full w-2/3 rounded-full animate-[shimmer_1.5s_infinite]" style={{
-                                          backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
-                                        }}></div>
-                                      </div>
-                                      <p className="text-[10px] text-gray-400">Processing high-fidelity frames via WaveSpeed. This typically takes 10-25 seconds...</p>
-                                    </div>
-                                  )}
-
-                                  {compilingErrors[`${keyPrefix}-part1`] && (
-                                    <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 flex flex-col gap-1 mt-1.5 text-red-400">
-                                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                                        <AlertCircle size={12} />
-                                        <span>Compilation Failed</span>
-                                      </div>
-                                      <p className="text-[10px] text-gray-400 leading-normal">{compilingErrors[`${keyPrefix}-part1`]}</p>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
@@ -576,74 +493,14 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                     {copiedIdx === `${keyPrefix}-part2` ? 'Copied Prompt 2!' : 'Copy Clip 2 Prompt'}
                                   </button>
 
-                                  {generatedVideos[`${keyPrefix}-part2`] ? (
-                                    <div className="rounded-xl overflow-hidden border border-green-500/20 bg-black/40 shadow-inner mt-1">
-                                      <video 
-                                        src={generatedVideos[`${keyPrefix}-part2`]} 
-                                        controls 
-                                        autoPlay 
-                                        loop 
-                                        muted 
-                                        className="w-full h-auto object-cover max-h-36"
-                                      />
-                                    </div>
-                                  ) : (
-                                    <button
-                                      onClick={() => triggerVideoGeneration(data.part2.prompt, `${keyPrefix}-part2`)}
-                                      disabled={generatingVideoKey !== null}
-                                      className={`w-full py-2 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all border ${
-                                        generatingVideoKey === `${keyPrefix}-part2`
-                                          ? 'bg-green-500/20 text-green-400 animate-pulse border-green-500/30'
-                                          : 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10'
-                                      }`}
-                                    >
-                                      {generatingVideoKey === `${keyPrefix}-part2` ? (
-                                        <>
-                                          <Loader2 size={12} className="animate-spin text-green-400" />
-                                          Compiling Video...
-                                        </>
-                                      ) : (
-                                        <>
-                                          <Play size={12} />
-                                          Compile Video 2
-                                        </>
-                                      )}
-                                    </button>
-                                  )}
-
                                   {/* Compile with Meta AI Button */}
                                   <button
                                     onClick={() => handleLaunchMetaAICopilot(data.part2.prompt, "Clip 2")}
-                                    className="w-full py-2 px-3 rounded-lg bg-gradient-to-r from-blue-600/20 via-purple-600/20 to-pink-600/20 hover:from-blue-500/30 hover:via-purple-500/30 hover:to-pink-500/30 text-white hover:text-cyan-200 transition-all text-xs font-bold flex items-center justify-center gap-1.5 border border-purple-500/30 shadow-md shadow-purple-500/5 mt-1"
+                                    className="w-full py-2.5 px-3 rounded-lg bg-gradient-to-r from-blue-600/30 via-purple-600/30 to-pink-600/30 hover:from-blue-500/50 hover:via-purple-500/50 hover:to-pink-500/50 text-white hover:text-cyan-200 transition-all text-xs font-extrabold flex items-center justify-center gap-2 border border-purple-500/40 shadow-lg shadow-purple-500/10 mt-1"
                                   >
-                                    <Sparkles size={12} className="text-purple-400 animate-pulse" />
+                                    <Sparkles size={14} className="text-purple-300 animate-pulse" />
                                     Compile with Meta AI (Free)
                                   </button>
-
-                                  {generatingVideoKey === `${keyPrefix}-part2` && (
-                                    <div className="p-3 rounded-lg border border-green-500/20 bg-green-500/5 flex flex-col gap-2 mt-1.5 animate-pulse">
-                                      <div className="flex items-center gap-2 text-[11px] font-bold text-green-400">
-                                        <Loader2 size={12} className="animate-spin" />
-                                        <span>AI Video Engine is compiling Clip 2...</span>
-                                      </div>
-                                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
-                                        <div className="bg-green-500 h-full w-2/3 rounded-full animate-[shimmer_1.5s_infinite]" style={{
-                                          backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
-                                        }}></div>
-                                      </div>
-                                      <p className="text-[10px] text-gray-400">Processing seamless continuation frames via WaveSpeed. This typically takes 10-25 seconds...</p>
-                                    </div>
-                                  )}
-
-                                  {compilingErrors[`${keyPrefix}-part2`] && (
-                                    <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 flex flex-col gap-1 mt-1.5 text-red-400">
-                                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
-                                        <AlertCircle size={12} />
-                                        <span>Compilation Failed</span>
-                                      </div>
-                                      <p className="text-[10px] text-gray-400 leading-normal">{compilingErrors[`${keyPrefix}-part2`]}</p>
-                                    </div>
-                                  )}
                                 </div>
                               )}
                             </div>
