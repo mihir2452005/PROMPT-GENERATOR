@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, ArrowRight, Zap, Image as ImageIcon } from 'lucide-react'
+import { TrendingUp, ArrowRight } from 'lucide-react'
 import api from '../services/api'
 
-export default function TrendSection() {
+export default function TrendSection({ onTrendClick }) {
   const [trends, setTrends] = useState([])
   const [loading, setLoading] = useState(true)
 
@@ -14,11 +14,10 @@ export default function TrendSection() {
         setTrends(res.data)
       } catch (err) {
         console.error('Failed to fetch trends', err)
-        // Fallback trends if backend fails
         setTrends([
-          { title: 'Cyberpunk Cityscapes', icon: 'Zap' },
-          { title: 'Ethereal Fantasy', icon: 'ImageIcon' },
-          { title: 'Neon Noir', icon: 'TrendingUp' }
+          { title: 'Cyberpunk Cityscape', topic: 'neon-lit cyberpunk city at night', mood: 'futuristic, neon-noir' },
+          { title: 'Ethereal Fantasy', topic: 'magical enchanted forest with glowing particles', mood: 'mystical, dreamy' },
+          { title: 'Ocean Sunset', topic: 'golden sunset over calm ocean waves', mood: 'peaceful, cinematic' }
         ])
       } finally {
         setLoading(false)
@@ -29,17 +28,18 @@ export default function TrendSection() {
 
   const container = {
     hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
-    }
+    show: { opacity: 1, transition: { staggerChildren: 0.08 } }
   }
 
   const item = {
     hidden: { opacity: 0, x: 20 },
     show: { opacity: 1, x: 0 }
+  }
+
+  const handleClick = (trend) => {
+    if (onTrendClick) {
+      onTrendClick({ topic: trend.topic, mood: trend.mood })
+    }
   }
 
   return (
@@ -48,13 +48,16 @@ export default function TrendSection() {
       animate={{ opacity: 1, scale: 1 }}
       className="p-8 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl h-full flex flex-col"
     >
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex items-center gap-3 mb-6">
         <div className="p-3 rounded-xl bg-blue-500/20 text-blue-400 shadow-[0_0_15px_rgba(59,130,246,0.5)]">
           <TrendingUp size={24} />
         </div>
-        <h2 className="text-3xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
-          Trending Styles
-        </h2>
+        <div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-white to-gray-400 bg-clip-text text-transparent">
+            Trending Styles
+          </h2>
+          <p className="text-xs text-gray-500 mt-0.5">Click to auto-fill the generator</p>
+        </div>
       </div>
 
       {loading ? (
@@ -66,31 +69,38 @@ export default function TrendSection() {
           variants={container}
           initial="hidden"
           animate="show"
-          className="space-y-4 flex-1 flex flex-col justify-center"
+          className="space-y-3 flex-1"
         >
           {trends.map((t, idx) => (
-            <motion.div 
+            <motion.button 
               key={idx}
               variants={item}
-              whileHover={{ scale: 1.02, x: 5 }}
-              className="group cursor-pointer p-5 rounded-2xl bg-black/40 border border-white/5 hover:bg-white/10 hover:border-white/20 transition-all flex items-center justify-between shadow-inner"
+              whileHover={{ scale: 1.02, x: 4 }}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => handleClick(t)}
+              className="group w-full text-left p-4 rounded-2xl bg-black/40 border border-white/5 hover:bg-accent/10 hover:border-accent/30 transition-all flex items-center justify-between shadow-inner"
             >
-              <div className="flex items-center gap-4">
-                <div className="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center text-gray-400 group-hover:text-blue-400 group-hover:bg-blue-500/10 transition-colors">
-                  <span className="text-sm font-bold">{idx + 1}</span>
+              <div className="flex items-center gap-3">
+                <div className="w-9 h-9 rounded-full bg-white/5 flex items-center justify-center text-gray-500 group-hover:text-accent group-hover:bg-accent/10 transition-colors text-sm font-bold">
+                  {idx + 1}
                 </div>
-                <span className="font-medium text-lg text-gray-200 group-hover:text-white transition-colors">
-                  {t.title}
-                </span>
+                <div>
+                  <span className="font-medium text-gray-200 group-hover:text-white transition-colors block">
+                    {t.title}
+                  </span>
+                  <span className="text-xs text-gray-600 group-hover:text-gray-400 transition-colors">
+                    {t.mood}
+                  </span>
+                </div>
               </div>
-              <ArrowRight size={18} className="text-gray-500 group-hover:text-blue-400 opacity-0 group-hover:opacity-100 transition-all transform -translate-x-4 group-hover:translate-x-0" />
-            </motion.div>
+              <ArrowRight size={16} className="text-gray-600 group-hover:text-accent opacity-0 group-hover:opacity-100 transition-all transform -translate-x-2 group-hover:translate-x-0" />
+            </motion.button>
           ))}
         </motion.div>
       )}
       
-      <div className="mt-8 pt-6 border-t border-white/10 text-center">
-        <p className="text-sm text-gray-500">Updated hourly based on community generations</p>
+      <div className="mt-6 pt-4 border-t border-white/10 text-center">
+        <p className="text-xs text-gray-600">Click any trend to auto-fill your prompt</p>
       </div>
     </motion.div>
   )

@@ -1,8 +1,11 @@
+import { useState } from 'react'
 import { motion } from 'framer-motion'
 import PromptGenerator from '../components/PromptGenerator'
 import TrendSection from '../components/TrendSection'
 
 export default function Dashboard(){
+  const [prefill, setPrefill] = useState(null)
+
   return (
     <div className="min-h-screen bg-midnight text-white overflow-x-hidden selection:bg-accent selection:text-white">
       {/* Animated Background Glows */}
@@ -33,7 +36,7 @@ export default function Dashboard(){
             transition={{ duration: 0.8, delay: 0.2 }}
             className="lg:col-span-7"
           >
-            <PromptGenerator />
+            <PromptGenerator prefill={prefill} />
           </motion.div>
           
           <motion.div 
@@ -42,11 +45,12 @@ export default function Dashboard(){
             transition={{ duration: 0.8, delay: 0.4 }}
             className="lg:col-span-5"
           >
-            <TrendSection />
+            <TrendSection onTrendClick={setPrefill} />
           </motion.div>
         </div>
       </div>
     </div>
   )
 }
+
 
