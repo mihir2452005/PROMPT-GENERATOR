@@ -141,11 +141,11 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
   const [generatingVideoKey, setGeneratingVideoKey] = useState(null)
   const [generatedVideos, setGeneratedVideos] = useState({})
-  const [compilingError, setCompilingError] = useState(null)
+  const [compilingErrors, setCompilingErrors] = useState({})
 
   const triggerVideoGeneration = async (promptText, key) => {
     setGeneratingVideoKey(key)
-    setCompilingError(null)
+    setCompilingErrors(prev => ({ ...prev, [key]: null }))
     try {
       const res = await api.post('/generate-video', { prompt: promptText })
       setGeneratedVideos(prev => ({
@@ -154,7 +154,11 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
       }))
     } catch (err) {
       console.error('Video compile error:', err)
-      setCompilingError(err.response?.data?.error || "Failed to generate video preview. Server is currently busy.")
+      const errMsg = err.response?.data?.error || "Failed to generate video. Hugging Face WaveSpeed serverless provider is currently compiling or busy. Please try again in a few seconds."
+      setCompilingErrors(prev => ({
+        ...prev,
+        [key]: errMsg
+      }))
     } finally {
       setGeneratingVideoKey(null)
     }
@@ -490,6 +494,31 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                       )}
                                     </button>
                                   )}
+
+                                  {generatingVideoKey === `${keyPrefix}-part1` && (
+                                    <div className="p-3 rounded-lg border border-accent/20 bg-accent/5 flex flex-col gap-2 mt-1.5 animate-pulse">
+                                      <div className="flex items-center gap-2 text-[11px] font-bold text-accent">
+                                        <Loader2 size={12} className="animate-spin" />
+                                        <span>AI Video Engine is compiling Clip 1...</span>
+                                      </div>
+                                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-accent h-full w-2/3 rounded-full animate-[shimmer_1.5s_infinite]" style={{
+                                          backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                                        }}></div>
+                                      </div>
+                                      <p className="text-[10px] text-gray-400">Processing high-fidelity frames via WaveSpeed. This typically takes 10-25 seconds...</p>
+                                    </div>
+                                  )}
+
+                                  {compilingErrors[`${keyPrefix}-part1`] && (
+                                    <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 flex flex-col gap-1 mt-1.5 text-red-400">
+                                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                                        <AlertCircle size={12} />
+                                        <span>Compilation Failed</span>
+                                      </div>
+                                      <p className="text-[10px] text-gray-400 leading-normal">{compilingErrors[`${keyPrefix}-part1`]}</p>
+                                    </div>
+                                  )}
                                 </div>
                               )}
                             </div>
@@ -559,6 +588,31 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                                         </>
                                       )}
                                     </button>
+                                  )}
+
+                                  {generatingVideoKey === `${keyPrefix}-part2` && (
+                                    <div className="p-3 rounded-lg border border-green-500/20 bg-green-500/5 flex flex-col gap-2 mt-1.5 animate-pulse">
+                                      <div className="flex items-center gap-2 text-[11px] font-bold text-green-400">
+                                        <Loader2 size={12} className="animate-spin" />
+                                        <span>AI Video Engine is compiling Clip 2...</span>
+                                      </div>
+                                      <div className="w-full bg-white/5 h-1.5 rounded-full overflow-hidden">
+                                        <div className="bg-green-500 h-full w-2/3 rounded-full animate-[shimmer_1.5s_infinite]" style={{
+                                          backgroundImage: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.4), transparent)'
+                                        }}></div>
+                                      </div>
+                                      <p className="text-[10px] text-gray-400">Processing seamless continuation frames via WaveSpeed. This typically takes 10-25 seconds...</p>
+                                    </div>
+                                  )}
+
+                                  {compilingErrors[`${keyPrefix}-part2`] && (
+                                    <div className="p-3 rounded-lg border border-red-500/20 bg-red-500/5 flex flex-col gap-1 mt-1.5 text-red-400">
+                                      <div className="flex items-center gap-1.5 text-[11px] font-bold">
+                                        <AlertCircle size={12} />
+                                        <span>Compilation Failed</span>
+                                      </div>
+                                      <p className="text-[10px] text-gray-400 leading-normal">{compilingErrors[`${keyPrefix}-part2`]}</p>
+                                    </div>
                                   )}
                                 </div>
                               )}
