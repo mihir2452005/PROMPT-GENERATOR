@@ -774,13 +774,18 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-xs font-bold shrink-0">1</div>
                   <div>
-                    <h5 className="text-xs font-bold text-white">Find Your Pre-loaded Extension Folder</h5>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Since you are running locally, the extension is already pre-built in your workspace directory:
-                      <code className="block mt-1 p-1 bg-black/40 text-[9px] text-pink-300 rounded border border-white/5 font-mono select-all">
-                        e:\projects\degree\prompt\meta_prompt_fullstack\meta_copilot_extension
-                      </code>
+                    <h5 className="text-xs font-bold text-white">Download & Extract Extension</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">
+                      Download our helper Extension package (.zip) and extract the compressed folder to any directory on your computer:
                     </p>
+                    <a
+                      href="/meta-copilot-extension.zip"
+                      download="meta-copilot-extension.zip"
+                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[10px] font-bold text-purple-200 transition-all active:scale-[0.98]"
+                    >
+                      <Sparkles size={11} className="text-purple-300" />
+                      Download Extension Package (.zip)
+                    </a>
                   </div>
                 </div>
 
