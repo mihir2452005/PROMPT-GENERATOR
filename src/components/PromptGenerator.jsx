@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Sparkles, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star } from 'lucide-react'
+import { Sparkles, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star, Loader2, AlertCircle } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
