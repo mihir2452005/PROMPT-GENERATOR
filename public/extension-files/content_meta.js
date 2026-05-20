@@ -74,9 +74,61 @@ function clickSend() {
   return false;
 }
 
+let lastProcessedError = "";
+
+function checkForMetaAIErrorMessage() {
+  const selectors = [
+    'div[class*="assistant"]',
+    'div[class*="bubble"]',
+    'div[class*="message"]',
+    'p',
+    'li'
+  ];
+  
+  const elements = [];
+  selectors.forEach(sel => {
+    document.querySelectorAll(sel).forEach(el => {
+      // Get exact element layout bounds
+      const rect = el.getBoundingClientRect();
+      if (rect.top > 0 && el.innerText && el.innerText.trim().length > 10) {
+        elements.push({ el, top: rect.top });
+      }
+    });
+  });
+  
+  // Sort elements by their vertical layout coordinate (most recent at bottom of chat is first)
+  elements.sort((a, b) => b.top - a.top);
+  
+  const keywords = [
+    "failed to render",
+    "generator's limits",
+    "retry with just",
+    "Which version do you want",
+    "unable to generate",
+    "error in rendering",
+    "failed to generate",
+    "try generating again",
+    "limit reached",
+    "failed to compile"
+  ];
+  
+  // Check the 6 most recent elements at the bottom
+  for (let i = 0; i < Math.min(6, elements.length); i++) {
+    const text = elements[i].el.innerText || "";
+    for (let kw of keywords) {
+      if (text.toLowerCase().includes(kw.toLowerCase())) {
+        return { detected: true, message: text };
+      }
+    }
+  }
+  return { detected: false };
+}
+
 function pollForNewVideo(callback) {
   console.log("Polling for new generated video...");
+  
   const pollInterval = setInterval(() => {
+    // 1. Check if a new video is generated successfully
     const videos = document.querySelectorAll('video');
     for (let video of videos) {
       if (video.src && !existingVideos.has(video.src) && !video.src.includes('blob:https://www.meta.ai/placeholder')) {
@@ -86,7 +138,57 @@ function pollForNewVideo(callback) {
         return;
       }
     }
-  }, 1000);
+
+    // 2. Check if Meta AI hit a render limit/error or returned alternate options
+    const errCheck = checkForMetaAIErrorMessage();
+    if (errCheck.detected && errCheck.message !== lastProcessedError) {
+      lastProcessedError = errCheck.message;
+      console.warn("Meta AI limits/errors hit! Triggering self-healing recovery...", errCheck.message);
+
+      // Devise a smart automatic response choice to guide Meta AI back into generation mode
+      let retryResponse = "retry generating video with simpler motion";
+      
+      const lowerMsg = errCheck.message.toLowerCase();
+      if (lowerMsg.includes("droplet focus-pull")) {
+        retryResponse = "retry with just the droplet focus-pull";
+      } else if (lowerMsg.includes("high-res still first")) {
+        retryResponse = "generate it as a high-res still first, then animate it";
+      } else if (lowerMsg.includes("separate clean pass")) {
+        retryResponse = "do the 360 orbit as a separate clean pass";
+      } else if (lowerMsg.includes("which version")) {
+        retryResponse = "retry generating the shot with simpler options";
+      }
+
+      // Notify the React WebApp tab with full error details and retry strategy
+      chrome.runtime.sendMessage({ action: "GET_TASK_DATA" }, (task) => {
+        chrome.runtime.sendMessage({
+          action: "UPDATE_STAGE",
+          updates: {
+            logs: [
+              ...(task.logs || []),
+              `⚠️ Meta AI hit limits: "${errCheck.message.substring(0, 120)}..."`,
+              `🤖 Co-Pilot self-healing: Automatically replying with: "${retryResponse}"`
+            ]
+          }
+        }, () => {
+          // Clear input and send the retry message
+          const input = findChatInput();
+          if (input) {
+            typeText(input, retryResponse);
+            setTimeout(() => {
+              clickSend();
+              
+              // Clear current interval and pause polling for 12 seconds to let the retry compile
+              clearInterval(pollInterval);
+              setTimeout(() => {
+                pollForNewVideo(callback);
+              }, 12000);
+            }, 1000);
+          }
+        });
+      });
+    }
+  }, 1800);
 }
 
 // Core execution workflow
