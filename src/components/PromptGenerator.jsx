@@ -742,7 +742,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
         )}
       </AnimatePresence>
 
-      {/* ⚡ Extension Pre-installation Modal */}
+      {/* ⚡ Extension Pre-installation Modal — browser-aware */}
       <AnimatePresence>
         {showExtensionModal && (
           <motion.div
@@ -763,49 +763,77 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
               <h4 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-pink-300 flex items-center gap-2 mb-2">
                 <Sparkles size={20} className="text-purple-400" />
-                Meta AI Co-Pilot Extension Required
+                Meta AI Co-Pilot Extension Setup
               </h4>
-              <p className="text-xs text-gray-400 mb-6">
-                To automate the browser typing, sending, and video stitching in 1-Click, you just need to load our free, pre-configured helper extension!
+              <p className="text-xs text-gray-400 mb-5">
+                Load our free helper extension once — then the Co-Pilot handles everything automatically, on any Chromium-based browser!
               </p>
 
-              {/* Developer mode instructions */}
               <div className="space-y-4 mb-6">
+                {/* Step 1 */}
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-xs font-bold shrink-0">1</div>
                   <div>
-                    <h5 className="text-xs font-bold text-white">Download & Extract Extension</h5>
-                    <p className="text-[10px] text-gray-400 mt-0.5">
-                      Download our helper Extension package (.zip) and extract the compressed folder to any directory on your computer:
-                    </p>
+                    <h5 className="text-xs font-bold text-white">Download & Unzip Extension</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Download the package below and extract it to any folder on your computer.</p>
                     <a
                       href="/meta-copilot-extension.zip"
                       download="meta-copilot-extension.zip"
                       className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[10px] font-bold text-purple-200 transition-all active:scale-[0.98]"
                     >
                       <Sparkles size={11} className="text-purple-300" />
-                      Download Extension Package (.zip)
+                      Download Extension (.zip)
                     </a>
                   </div>
                 </div>
 
+                {/* Step 2 — copy-to-clipboard URLs per browser */}
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center text-xs font-bold shrink-0">2</div>
-                  <div>
-                    <h5 className="text-xs font-bold text-white">Open Browser Extension Manager</h5>
-                    <p className="text-[10px] text-gray-500 mt-0.5">
-                      Open a new tab and type <span className="text-blue-400 hover:underline cursor-pointer font-bold">chrome://extensions</span> (or click Settings &rarr; Extensions).
+                  <div className="w-full">
+                    <h5 className="text-xs font-bold text-white">Open Extensions Page in Your Browser</h5>
+                    <p className="text-[10px] text-gray-500 mt-0.5 mb-2">
+                      Click your browser below to copy its Extensions URL, then paste it into a new tab and press Enter:
                     </p>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {[
+                        { icon: '🟡', label: 'Google Chrome', url: 'chrome://extensions' },
+                        { icon: '🦁', label: 'Brave Browser', url: 'brave://extensions' },
+                        { icon: '🔵', label: 'Microsoft Edge', url: 'edge://extensions' },
+                        { icon: '🟠', label: 'Opera Browser', url: 'opera://extensions' },
+                      ].map(({ icon, label, url }) => (
+                        <button
+                          key={url}
+                          onClick={() => navigator.clipboard.writeText(url).catch(() => {})}
+                          title={`Click to copy ${url}`}
+                          className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-black/40 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/30 text-left transition-all group"
+                        >
+                          <span className="text-base leading-none">{icon}</span>
+                          <div className="min-w-0">
+                            <p className="text-[9px] text-gray-500">{label}</p>
+                            <p className="text-[10px] font-mono text-blue-300 truncate">{url}</p>
+                          </div>
+                          <span className="ml-auto text-[8px] text-gray-600 group-hover:text-blue-400 shrink-0">📋</span>
+                        </button>
+                      ))}
+                    </div>
+                    <p className="text-[9px] text-gray-600 mt-1.5">💡 Click a row to copy the URL, then paste it in your browser address bar & press Enter.</p>
                   </div>
                 </div>
 
+                {/* Step 3 */}
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center justify-center text-xs font-bold shrink-0">3</div>
                   <div>
                     <h5 className="text-xs font-bold text-white">Enable Developer Mode & Load Unpacked</h5>
                     <p className="text-[10px] text-gray-500 mt-0.5">
-                      Toggle the **Developer Mode** switch in the top right of the extensions tab, click the **"Load unpacked"** button on the top left, and choose the `meta_copilot_extension` folder in your project!
+                      On the Extensions page, toggle <strong className="text-white">Developer Mode</strong> (top-right switch), then click <strong className="text-white">Load unpacked</strong> and select your extracted <code className="text-pink-300 bg-black/30 px-1 rounded">meta_copilot_extension</code> folder.
                     </p>
+                    <div className="mt-1.5 p-2 rounded-lg bg-yellow-500/5 border border-yellow-500/15">
+                      <p className="text-[9px] text-yellow-400/80">
+                        🦊 <strong>Firefox users:</strong> Go to <code className="text-yellow-300">about:debugging</code> instead and click <strong>Load Temporary Add-on</strong>.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </div>
