@@ -17,4 +17,16 @@ api.interceptors.request.use((config) => {
   return Promise.reject(error)
 })
 
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response && error.response.status === 401) {
+      console.warn("Unauthorized API access (401). Clearing invalid/expired session token and redirecting to login...")
+      localStorage.removeItem('meta_token')
+      window.location.reload()
+    }
+    return Promise.reject(error)
+  }
+)
+
 export default api
