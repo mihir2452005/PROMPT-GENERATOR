@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Sparkles, Type, Palette, Copy, CheckCircle, ChevronDown, Monitor, Star, Loader2, AlertCircle } from 'lucide-react'
 import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
+import { mergeVideos } from '../utils/videoMerger'
 
 export default function PromptGenerator({ prefill, onGenerateSuccess, onFavoritesChange, favoritesRefreshTrigger }) {
   const [topic, setTopic] = useState('')
@@ -144,6 +145,53 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
   const [copilotClipName, setCopilotClipName] = useState('')
   const [copilotPart, setCopilotPart] = useState(1)
 
+  // Chrome Extension & Auto-stitching states
+  const [isExtensionInstalled, setIsExtensionInstalled] = useState(false)
+  const [isAutoCompiling, setIsAutoCompiling] = useState(false)
+  const [copilotStatus, setCopilotStatus] = useState('')
+  const [copilotLogs, setCopilotLogs] = useState([])
+  const [stitchedVideoUrl, setStitchedVideoUrl] = useState('')
+  const [stitchProgress, setStitchProgress] = useState('')
+  const [showExtensionModal, setShowExtensionModal] = useState(false)
+
+  // Listen for extension installation & messaging bridges
+  useEffect(() => {
+    // 1. Initial check: did the content script run first?
+    if (document.body.dataset.metaCopilotInstalled === "true") {
+      setIsExtensionInstalled(true)
+    }
+
+    // 2. Event listener for dynamic detection
+    const handleExtensionInstalledEvent = () => {
+      setIsExtensionInstalled(true)
+    }
+    window.addEventListener("META_COPILOT_INSTALLED", handleExtensionInstalledEvent)
+
+    // 3. Listen for co-pilot bridge updates
+    const handleBridgeMessages = (event) => {
+      if (event.source !== window) return
+      
+      if (event.data && event.data.type === "COPILOT_PROGRESS_UPDATE") {
+        if (event.data.updates.logs) {
+          setCopilotLogs(event.data.updates.logs)
+        }
+        if (event.data.updates.status) {
+          setCopilotStatus(event.data.updates.status)
+        }
+      } 
+      
+      else if (event.data && event.data.type === "COPILOT_SUCCESS") {
+        handleAutoStitchVideos(event.data.part1VideoUrl, event.data.part2VideoUrl)
+      }
+    };
+    window.addEventListener("message", handleBridgeMessages)
+
+    return () => {
+      window.removeEventListener("META_COPILOT_INSTALLED", handleExtensionInstalledEvent)
+      window.removeEventListener("message", handleBridgeMessages)
+    }
+  }, [])
+
   const handleLaunchMetaAICopilot = (promptText, clipName, partNum, shouldOpenTab) => {
     navigator.clipboard.writeText(promptText)
     setCopilotPromptText(promptText)
@@ -152,6 +200,46 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     setShowMetaAICopilot(true)
     if (shouldOpenTab) {
       window.open('https://meta.ai', '_blank')
+    }
+  }
+
+  // 1-Click Auto Compile trigger
+  const handleStartAutoCompile = (prompt1, prompt2) => {
+    if (!isExtensionInstalled) {
+      setShowExtensionModal(true)
+      return
+    }
+
+    setCopilotLogs(["Initiating automatic browser co-pilot compilation...", "Opening Meta AI in background..."])
+    setCopilotStatus("generating_part1")
+    setStitchedVideoUrl("")
+    setStitchProgress("")
+    setIsAutoCompiling(true)
+
+    // Send compile postMessage event that is captured by content_webapp.js
+    window.postMessage({
+      type: "START_AUTO_COMPILE",
+      prompt1,
+      prompt2
+    }, "*")
+  }
+
+  // Canvas video stitching pipeline invocation
+  const handleAutoStitchVideos = async (videoUrl1, videoUrl2) => {
+    setCopilotStatus("stitching")
+    setCopilotLogs(prev => [...prev, "Meta AI video rendering completed successfully!", "Running off-screen Canvas-based stitch engine..."])
+
+    try {
+      const resultUrl = await mergeVideos(videoUrl1, videoUrl2, (progressMsg) => {
+        setStitchProgress(progressMsg)
+      })
+      setStitchedVideoUrl(resultUrl)
+      setCopilotStatus("success")
+      setCopilotLogs(prev => [...prev, "Cinematic 10-Second consolidated master video compiled successfully!"])
+    } catch (err) {
+      console.error("Stitching crash:", err)
+      setCopilotStatus("failed")
+      setCopilotLogs(prev => [...prev, "Failed to compile/stitch videos: " + err.message])
     }
   }
 
@@ -422,6 +510,31 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                             </div>
                           )}
 
+                          {/* ⚡ Extension-Powered Auto Compiler Section */}
+                          {data.part1.prompt && data.part2.prompt && (
+                            <div className="p-5 rounded-2xl bg-gradient-to-r from-blue-950/40 via-purple-950/40 to-pink-950/40 border border-purple-500/20 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-xl my-2">
+                              <div className="text-left">
+                                <div className="flex items-center gap-2">
+                                  <span className="w-2.5 h-2.5 rounded-full bg-green-500 animate-pulse shrink-0"></span>
+                                  <h5 className="text-xs font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-pink-300 uppercase tracking-wider">
+                                    Hands-Free Auto-Stitch Co-Pilot
+                                  </h5>
+                                </div>
+                                <p className="text-[10px] text-gray-400 mt-1">
+                                  Automatically triggers both generation rounds on Meta AI and compiles a continuous 10s video!
+                                </p>
+                              </div>
+                              
+                              <button
+                                onClick={() => handleStartAutoCompile(data.part1.prompt, data.part2.prompt)}
+                                className="shrink-0 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 hover:from-blue-500 hover:via-purple-500 hover:to-pink-500 text-white font-extrabold text-xs flex items-center gap-2 shadow-lg shadow-purple-500/20 active:scale-[0.97] transition-all"
+                              >
+                                <Sparkles size={14} className="text-purple-200 animate-pulse" />
+                                ⚡ 1-Click Auto-Compile 10s Video
+                              </button>
+                            </div>
+                          )}
+
                           {/* Dual Part Sequential Columns */}
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             {/* Part 1 */}
@@ -622,6 +735,205 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                   className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-blue-500 to-pink-500 hover:from-blue-600 hover:to-pink-600 text-white font-bold text-xs transition-all shadow-md shadow-purple-500/20 flex items-center justify-center"
                 >
                   Done, I'm Back!
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ⚡ Extension Pre-installation Modal */}
+      <AnimatePresence>
+        {showExtensionModal && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/80 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-lg bg-gradient-to-b from-gray-900 via-gray-950 to-black border border-purple-500/30 rounded-3xl p-6 shadow-2xl relative overflow-hidden text-left"
+            >
+              {/* Glow accents */}
+              <div className="absolute -top-24 -left-24 w-48 h-48 bg-purple-500/10 rounded-full blur-3xl pointer-events-none"></div>
+              <div className="absolute -bottom-24 -right-24 w-48 h-48 bg-blue-500/10 rounded-full blur-3xl pointer-events-none"></div>
+
+              <h4 className="text-lg font-black text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-pink-300 flex items-center gap-2 mb-2">
+                <Sparkles size={20} className="text-purple-400" />
+                Meta AI Co-Pilot Extension Required
+              </h4>
+              <p className="text-xs text-gray-400 mb-6">
+                To automate the browser typing, sending, and video stitching in 1-Click, you just need to load our free, pre-configured helper extension!
+              </p>
+
+              {/* Developer mode instructions */}
+              <div className="space-y-4 mb-6">
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-xs font-bold shrink-0">1</div>
+                  <div>
+                    <h5 className="text-xs font-bold text-white">Find Your Pre-loaded Extension Folder</h5>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      Since you are running locally, the extension is already pre-built in your workspace directory:
+                      <code className="block mt-1 p-1 bg-black/40 text-[9px] text-pink-300 rounded border border-white/5 font-mono select-all">
+                        e:\projects\degree\prompt\meta_prompt_fullstack\meta_copilot_extension
+                      </code>
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                  <div>
+                    <h5 className="text-xs font-bold text-white">Open Browser Extension Manager</h5>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      Open a new tab and type <span className="text-blue-400 hover:underline cursor-pointer font-bold">chrome://extensions</span> (or click Settings &rarr; Extensions).
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="w-6 h-6 rounded-full bg-pink-500/20 text-pink-300 border border-pink-500/30 flex items-center justify-center text-xs font-bold shrink-0">3</div>
+                  <div>
+                    <h5 className="text-xs font-bold text-white">Enable Developer Mode & Load Unpacked</h5>
+                    <p className="text-[10px] text-gray-500 mt-0.5">
+                      Toggle the **Developer Mode** switch in the top right of the extensions tab, click the **"Load unpacked"** button on the top left, and choose the `meta_copilot_extension` folder in your project!
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setShowExtensionModal(false)}
+                  className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-extrabold text-xs transition-all shadow-md shadow-purple-500/20"
+                >
+                  I Loaded It! Ready to Compile 🚀
+                </button>
+                <button
+                  onClick={() => setShowExtensionModal(false)}
+                  className="py-3 px-4 rounded-xl bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white border border-white/5 text-xs font-bold transition-all"
+                >
+                  Cancel
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* ⚡ Live Auto-Compiling Overlay */}
+      <AnimatePresence>
+        {isAutoCompiling && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+          >
+            <motion.div
+              initial={{ scale: 0.95, y: 20 }}
+              animate={{ scale: 1, y: 0 }}
+              exit={{ scale: 0.95, y: 20 }}
+              className="w-full max-w-xl bg-gradient-to-b from-gray-900 to-black border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden text-center"
+            >
+              {/* Pulsing ring visual */}
+              {copilotStatus !== "success" && copilotStatus !== "failed" && (
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 animate-[spin_3s_linear_infinite] mb-4">
+                    <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
+                      <Loader2 className="animate-spin text-purple-400" size={24} />
+                    </div>
+                  </div>
+                  <h4 className="text-lg font-black text-white">Co-Pilot Auto-Compiling Video...</h4>
+                  <p className="text-xs text-gray-400 mt-1">Please keep the newly opened Meta AI browser tab active!</p>
+                </div>
+              )}
+
+              {/* Success Visual */}
+              {copilotStatus === "success" && (
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 mb-4 shadow-lg shadow-green-500/10 animate-bounce">
+                    <CheckCircle size={32} />
+                  </div>
+                  <h4 className="text-lg font-black text-white">Compilation Complete! 🎉</h4>
+                  <p className="text-xs text-gray-400 mt-1">Stitched two 5s cinematic clips into a seamless 10s master video!</p>
+                </div>
+              )}
+
+              {/* Error Visual */}
+              {copilotStatus === "failed" && (
+                <div className="flex flex-col items-center justify-center mb-6">
+                  <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
+                    <AlertCircle size={32} />
+                  </div>
+                  <h4 className="text-lg font-black text-white">Compilation Failed</h4>
+                  <p className="text-xs text-gray-400 mt-1 font-sans">An error occurred in the co-pilot automation pipeline.</p>
+                </div>
+              )}
+
+              {/* Stitching Progress Bar */}
+              {copilotStatus === "stitching" && (
+                <div className="w-full bg-white/5 rounded-full h-2 mb-6 border border-white/5 overflow-hidden">
+                  <div 
+                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full transition-all duration-300"
+                    style={{ 
+                      width: stitchProgress.includes("fallback") 
+                        ? "75%" 
+                        : stitchProgress.includes("Clip 1") 
+                          ? `${parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
+                          : `${50 + parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
+                    }}
+                  ></div>
+                </div>
+              )}
+
+              {/* Real-time Logs Console */}
+              <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-left font-mono text-[11px] text-gray-300 h-48 overflow-y-auto space-y-1.5 mb-6">
+                {copilotLogs.map((log, index) => (
+                  <div key={index} className="flex gap-2 items-start">
+                    <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                    <span className={log.includes("successfully") || log.includes("Complete") ? "text-green-400" : log.includes("failed") || log.includes("Failed") || log.includes("error") ? "text-red-400" : "text-gray-300"}>
+                      {log}
+                    </span>
+                  </div>
+                ))}
+                {copilotStatus === "stitching" && stitchProgress && (
+                  <div className="text-blue-300 font-bold">Stitcher Status: {stitchProgress}</div>
+                )}
+              </div>
+
+              {/* Render success output video! */}
+              {copilotStatus === "success" && stitchedVideoUrl && (
+                <div className="rounded-2xl border border-white/10 overflow-hidden bg-black mb-6 aspect-video max-h-60 flex items-center justify-center shadow-inner">
+                  <video src={stitchedVideoUrl} controls className="w-full h-full object-contain" autoPlay muted loop />
+                </div>
+              )}
+
+              {/* Action Triggers */}
+              <div className="flex gap-2">
+                {copilotStatus === "success" && stitchedVideoUrl && (
+                  <a
+                    href={stitchedVideoUrl}
+                    download="meta-ai-cinematic-10s-storyboard.mp4"
+                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-extrabold text-xs transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-1.5"
+                  >
+                    Download 10s MP4 Video 📥
+                  </a>
+                )}
+                
+                <button
+                  onClick={() => {
+                    setIsAutoCompiling(false)
+                    setCopilotStatus('')
+                    setCopilotLogs([])
+                    setStitchedVideoUrl('')
+                  }}
+                  className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/5 text-xs font-bold transition-all"
+                >
+                  {copilotStatus === "success" ? "Back to Storyboards" : "Close Compiler Panel"}
                 </button>
               </div>
             </motion.div>
