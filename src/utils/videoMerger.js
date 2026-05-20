@@ -120,13 +120,16 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
       const targetFrameMs = 1000 / fps; // 33.33ms
 
       async function renderVideoFrames(videoEl, startProgress, endProgress, progressMessage) {
-        let duration = videoEl.duration;
-        if (!duration || isNaN(duration)) {
-          duration = 5.0; // Safe fallback if duration metadata has not loaded
+        // Enforce strict clamp duration (max 5.0s per clip)
+        // Meta AI generates exactly 5s clips. Bloated Facebook CDN header durations (e.g. 12s) 
+        // stretch the video into laggy slow-motion. Clamping to 5.0s preserves original speed!
+        let duration = 5.0;
+        if (videoEl.duration && !isNaN(videoEl.duration) && videoEl.duration < 5.0 && videoEl.duration > 1.0) {
+          duration = videoEl.duration;
         }
         
         const totalFrames = Math.ceil(duration * fps);
-        console.log(`Rendering ${totalFrames} frames for video source...`);
+        console.log(`Rendering exact ${totalFrames} frames (duration: ${duration}s) for video source...`);
 
         for (let i = 0; i < totalFrames; i++) {
           const frameStartTime = performance.now();

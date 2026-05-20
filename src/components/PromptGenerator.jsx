@@ -1066,20 +1066,22 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                   </div>
                 )}
 
-                {/* Real-time Logs Console */}
-                <div className="bg-black/60 border border-white/5 rounded-xl p-3 text-left font-mono text-[10px] text-gray-300 h-28 overflow-y-auto space-y-1 mb-3 shrink-0 scrollbar-thin scrollbar-thumb-white/10">
-                  {copilotLogs.map((log, index) => (
-                    <div key={index} className="flex gap-1.5 items-start">
-                      <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
-                      <span className={log.includes("successfully") || log.includes("Complete") ? "text-green-400" : log.includes("failed") || log.includes("Failed") || log.includes("error") ? "text-red-400" : "text-gray-300"}>
-                        {log}
-                      </span>
-                    </div>
-                  ))}
-                  {copilotStatus === "stitching" && stitchProgress && (
-                    <div className="text-blue-300 font-bold mt-0.5">Stitcher Status: {stitchProgress}</div>
-                  )}
-                </div>
+                {/* Real-time Logs Console - Hidden on success to keep compilation screen spacious & perfectly centered */}
+                {copilotStatus !== "success" && (
+                  <div className="bg-black/60 border border-white/5 rounded-xl p-3 text-left font-mono text-[10px] text-gray-300 h-28 overflow-y-auto space-y-1 mb-3 shrink-0 scrollbar-thin scrollbar-thumb-white/10">
+                    {copilotLogs.map((log, index) => (
+                      <div key={index} className="flex gap-1.5 items-start">
+                        <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                        <span className={log.includes("successfully") || log.includes("Complete") ? "text-green-400" : log.includes("failed") || log.includes("Failed") || log.includes("error") ? "text-red-400" : "text-gray-300"}>
+                          {log}
+                        </span>
+                      </div>
+                    ))}
+                    {copilotStatus === "stitching" && stitchProgress && (
+                      <div className="text-blue-300 font-bold mt-0.5">Stitcher Status: {stitchProgress}</div>
+                    )}
+                  </div>
+                )}
 
                 {/* Render success output video! - Highly responsive & aspect-locked */}
                 {copilotStatus === "success" && stitchedVideoUrl && (
