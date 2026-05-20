@@ -787,39 +787,76 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                   </div>
                 </div>
 
-                {/* Step 2 — copy-to-clipboard URLs per browser */}
-                <div className="flex gap-3">
-                  <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center text-xs font-bold shrink-0">2</div>
-                  <div className="w-full">
-                    <h5 className="text-xs font-bold text-white">Open Extensions Page in Your Browser</h5>
-                    <p className="text-[10px] text-gray-500 mt-0.5 mb-2">
-                      Click your browser below to copy its Extensions URL, then paste it into a new tab and press Enter:
-                    </p>
-                    <div className="grid grid-cols-2 gap-1.5">
-                      {[
-                        { icon: '🟡', label: 'Google Chrome', url: 'chrome://extensions' },
-                        { icon: '🦁', label: 'Brave Browser', url: 'brave://extensions' },
-                        { icon: '🔵', label: 'Microsoft Edge', url: 'edge://extensions' },
-                        { icon: '🟠', label: 'Opera Browser', url: 'opera://extensions' },
-                      ].map(({ icon, label, url }) => (
-                        <button
-                          key={url}
-                          onClick={() => navigator.clipboard.writeText(url).catch(() => {})}
-                          title={`Click to copy ${url}`}
-                          className="flex items-center gap-2 px-2.5 py-2 rounded-xl bg-black/40 hover:bg-blue-500/10 border border-white/5 hover:border-blue-500/30 text-left transition-all group"
-                        >
-                          <span className="text-base leading-none">{icon}</span>
-                          <div className="min-w-0">
-                            <p className="text-[9px] text-gray-500">{label}</p>
-                            <p className="text-[10px] font-mono text-blue-300 truncate">{url}</p>
+                {/* Step 2 — auto-detected browser extension URL */}
+                {(() => {
+                  const ua = navigator.userAgent
+                  const isBrave = navigator.brave?.isBrave !== undefined
+                  const isEdge = ua.includes('Edg/')
+                  const isOpera = ua.includes('OPR/') || ua.includes('Opera/')
+                  const isFirefox = ua.includes('Firefox/')
+                  const isSafari = ua.includes('Safari/') && !ua.includes('Chrome/')
+                  
+                  let browser = null
+                  if (isBrave) browser = { icon: '🦁', label: 'Brave Browser', url: 'brave://extensions', chromium: true }
+                  else if (isEdge) browser = { icon: '🔵', label: 'Microsoft Edge', url: 'edge://extensions', chromium: true }
+                  else if (isOpera) browser = { icon: '🟠', label: 'Opera Browser', url: 'opera://extensions', chromium: true }
+                  else if (isFirefox) browser = { icon: '🦊', label: 'Firefox', url: 'about:debugging', chromium: false }
+                  else if (isSafari) browser = { icon: '🧭', label: 'Safari', url: null, chromium: false }
+                  else browser = { icon: '🟡', label: 'Google Chrome', url: 'chrome://extensions', chromium: true }
+
+                  return (
+                    <div className="flex gap-3">
+                      <div className="w-6 h-6 rounded-full bg-blue-500/20 text-blue-300 border border-blue-500/30 flex items-center justify-center text-xs font-bold shrink-0">2</div>
+                      <div className="w-full">
+                        <h5 className="text-xs font-bold text-white flex items-center gap-1.5">
+                          <span>{browser.icon}</span>
+                          Open Extensions Page — {browser.label} detected
+                        </h5>
+
+                        {browser.chromium && browser.url && (
+                          <>
+                            <p className="text-[10px] text-gray-500 mt-1 mb-2">
+                              Copy the URL below, open a new tab, paste it in the address bar and press <strong className="text-white">Enter</strong>:
+                            </p>
+                            <button
+                              onClick={() => {
+                                navigator.clipboard.writeText(browser.url).catch(() => {})
+                              }}
+                              className="w-full flex items-center justify-between gap-3 px-3 py-2.5 rounded-xl bg-blue-500/10 hover:bg-blue-500/20 border border-blue-500/20 hover:border-blue-500/40 transition-all group"
+                            >
+                              <span className="text-[11px] font-mono text-blue-300 tracking-wider">{browser.url}</span>
+                              <span className="text-[9px] text-gray-500 group-hover:text-blue-300 shrink-0 font-bold">📋 Click to Copy</span>
+                            </button>
+                            <p className="text-[9px] text-gray-600 mt-1.5">💡 Paste the copied URL into a new browser tab and press Enter.</p>
+                          </>
+                        )}
+
+                        {browser.label === 'Firefox' && (
+                          <div className="mt-1.5 p-2.5 rounded-xl bg-orange-500/5 border border-orange-500/20">
+                            <p className="text-[10px] text-orange-300 font-bold mb-1">Firefox Instructions:</p>
+                            <ol className="text-[9px] text-gray-400 space-y-0.5 list-none">
+                              <li>1. Copy <code className="text-yellow-300 bg-black/30 px-1 rounded">about:debugging</code> and open it in a new tab</li>
+                              <li>2. Click <strong className="text-white">This Firefox</strong> in the left sidebar</li>
+                              <li>3. Click <strong className="text-white">Load Temporary Add-on...</strong></li>
+                              <li>4. Select the <code className="text-pink-300 bg-black/30 px-1 rounded">manifest.json</code> inside your extension folder</li>
+                            </ol>
+                            <button
+                              onClick={() => navigator.clipboard.writeText('about:debugging').catch(() => {})}
+                              className="mt-2 text-[9px] text-orange-400 hover:text-orange-200 font-bold border border-orange-500/20 px-2 py-1 rounded-lg transition-all"
+                            >📋 Copy about:debugging</button>
                           </div>
-                          <span className="ml-auto text-[8px] text-gray-600 group-hover:text-blue-400 shrink-0">📋</span>
-                        </button>
-                      ))}
+                        )}
+
+                        {browser.label === 'Safari' && (
+                          <div className="mt-1.5 p-2.5 rounded-xl bg-red-500/5 border border-red-500/20">
+                            <p className="text-[10px] text-red-300 font-bold mb-1">⚠️ Safari Not Supported</p>
+                            <p className="text-[9px] text-gray-500">Safari does not support Chrome/Chromium extensions. Please switch to <strong className="text-white">Chrome, Brave, or Edge</strong> to use the Co-Pilot automation feature.</p>
+                          </div>
+                        )}
+                      </div>
                     </div>
-                    <p className="text-[9px] text-gray-600 mt-1.5">💡 Click a row to copy the URL, then paste it in your browser address bar & press Enter.</p>
-                  </div>
-                </div>
+                  )
+                })()}
 
                 {/* Step 3 */}
                 <div className="flex gap-3">
