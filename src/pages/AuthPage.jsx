@@ -7,7 +7,7 @@ import api from '../services/api'
 import { useAuth } from '../context/AuthContext'
 
 export default function AuthPage() {
-  const [isLogin, setIsLogin] = useState(true)
+  const [isLogin, setIsLogin] = useState(() => localStorage.getItem('hasLoggedInBefore') === 'true')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
@@ -28,11 +28,13 @@ export default function AuthPage() {
     try {
       if (isLogin) {
         const res = await api.post('/login', { email, password })
+        localStorage.setItem('hasLoggedInBefore', 'true')
         login(res.data.token)
         navigate('/')
       } else {
         await api.post('/register', { email, password })
         const loginRes = await api.post('/login', { email, password })
+        localStorage.setItem('hasLoggedInBefore', 'true')
         login(loginRes.data.token)
         navigate('/')
       }
@@ -51,6 +53,7 @@ export default function AuthPage() {
       const res = await api.post('/login/google', {
         credential: credentialResponse.credential
       })
+      localStorage.setItem('hasLoggedInBefore', 'true')
       login(res.data.token)
       navigate('/')
     } catch (err) {
