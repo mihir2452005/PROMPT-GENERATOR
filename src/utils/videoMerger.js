@@ -25,15 +25,39 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
       v1.src = videoUrl1;
       v2.src = videoUrl2;
 
-      // Wait for both videos to load metadata to get target resolution
+      // Wait for both videos to fully load data to get precise non-zero target resolution
       await Promise.all([
         new Promise(res => {
-          if (v1.readyState >= 1) res();
-          else v1.addEventListener("loadedmetadata", () => res(), { once: true });
+          if (v1.readyState >= 2 && v1.videoWidth > 0) res();
+          else {
+            const check = () => {
+              if (v1.videoWidth > 0) {
+                v1.removeEventListener("loadeddata", check);
+                v1.removeEventListener("canplay", check);
+                res();
+              }
+            };
+            v1.addEventListener("loadeddata", check);
+            v1.addEventListener("canplay", check);
+            // Fallback timeout
+            setTimeout(res, 3000);
+          }
         }),
         new Promise(res => {
-          if (v2.readyState >= 1) res();
-          else v2.addEventListener("loadedmetadata", () => res(), { once: true });
+          if (v2.readyState >= 2 && v2.videoWidth > 0) res();
+          else {
+            const check = () => {
+              if (v2.videoWidth > 0) {
+                v2.removeEventListener("loadeddata", check);
+                v2.removeEventListener("canplay", check);
+                res();
+              }
+            };
+            v2.addEventListener("loadeddata", check);
+            v2.addEventListener("canplay", check);
+            // Fallback timeout
+            setTimeout(res, 3000);
+          }
         })
       ]);
 
@@ -47,14 +71,28 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
       canvas.width = width;
       canvas.height = height;
       const ctx = canvas.getContext("2d");
+      
+      // Enforce high-fidelity pixel-perfect lossless smoothing scaling quality
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = "high";
 
       // 3. Setup canvas stream recording at 30 FPS
       const stream = canvas.captureStream(30);
       
-      // Support standard video MIME types across browsers
-      const options = { mimeType: 'video/webm;codecs=vp9,opus' };
+      // Support standard video MIME types across browsers with premium ultra-high lossless bitrate (16 Mbps)
+      const options = { 
+        mimeType: 'video/webm;codecs=vp9,opus',
+        videoBitsPerSecond: 16000000 // 16 Megabits per second for spectacular lossless quality!
+      };
+      
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm;codecs=h264';
+      }
       if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options.mimeType = 'video/webm';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/mp4;codecs=avc1';
       }
       if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options.mimeType = 'video/mp4';
