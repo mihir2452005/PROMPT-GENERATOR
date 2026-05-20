@@ -15,7 +15,8 @@ function registerExistingVideos() {
 function findChatInput() {
   return document.querySelector('div[contenteditable="true"]') || 
          document.querySelector('textarea') || 
-         document.querySelector('input[type="text"]');
+         document.querySelector('input[type="text"]') ||
+         document.querySelector('[role="textbox"]');
 }
 
 function typeText(inputElement, text) {
@@ -27,11 +28,16 @@ function typeText(inputElement, text) {
   } else {
     // Contenteditable div
     inputElement.focus();
-    // Clear initial contenteditable text safely
-    document.execCommand('selectAll', false, null);
-    document.execCommand('delete', false, null);
-    // Write text programmatically
-    document.execCommand('insertText', false, text);
+    try {
+      // Clear initial contenteditable text safely
+      document.execCommand('selectAll', false, null);
+      document.execCommand('delete', false, null);
+      // Write text programmatically
+      document.execCommand('insertText', false, text);
+    } catch (err) {
+      console.warn("execCommand failed, using innerText fallback:", err);
+      inputElement.innerText = text;
+    }
     inputElement.dispatchEvent(new Event('input', { bubbles: true }));
     inputElement.dispatchEvent(new Event('change', { bubbles: true }));
   }
@@ -40,8 +46,11 @@ function typeText(inputElement, text) {
 function clickSend() {
   const sendButton = document.querySelector('button[aria-label*="Send message"]') ||
                      document.querySelector('button[aria-label*="Send"]') ||
+                     document.querySelector('button[aria-label*="Submit"]') ||
                      document.querySelector('button[type="submit"]') ||
-                     document.querySelector('button[class*="send"]');
+                     document.querySelector('button[class*="send"]') ||
+                     document.querySelector('div[role="button"][aria-label*="Send"]') ||
+                     document.querySelector('div[role="button"][aria-label*="Submit"]');
   if (sendButton) {
     sendButton.focus();
     sendButton.click();

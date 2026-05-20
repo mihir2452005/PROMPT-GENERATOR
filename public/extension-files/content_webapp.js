@@ -33,6 +33,11 @@ if (!metaTag || metaTag.getAttribute("content") !== "MetaPrompt Studio") {
           }));
         } else {
           console.log("Background initiation response:", response);
+          window.dispatchEvent(new CustomEvent("COPILOT_PROGRESS_UPDATE_EVENT", {
+            detail: {
+              logs: ["Extension bridge connected.", "Background response received: " + JSON.stringify(response)]
+            }
+          }));
         }
       });
     } catch (err) {

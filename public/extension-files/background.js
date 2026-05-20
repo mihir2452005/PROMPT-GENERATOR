@@ -29,6 +29,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           return;
         }
 
+        // Send intermediate log to webapp tab
+        chrome.tabs.sendMessage(webappTabId, {
+          action: "LOG_PROGRESS",
+          updates: {
+            logs: ["Starting automation...", "Instructions saved. Opening Meta AI tab..."]
+          }
+        }, () => {
+          const err = chrome.runtime.lastError;
+        });
+
         // Launch Meta AI in a fresh tab
         chrome.tabs.create({ url: "https://www.meta.ai/" }, (tab) => {
           if (chrome.runtime.lastError) {
