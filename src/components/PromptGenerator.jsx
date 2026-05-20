@@ -1004,94 +1004,99 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/90 backdrop-blur-md z-50 flex items-center justify-center p-4"
+            className="fixed inset-0 bg-black/95 backdrop-blur-md z-50 flex items-center justify-center p-3 md:p-4"
           >
             <motion.div
               initial={{ scale: 0.95, y: 20 }}
               animate={{ scale: 1, y: 0 }}
               exit={{ scale: 0.95, y: 20 }}
-              className="w-full max-w-xl bg-gradient-to-b from-gray-900 to-black border border-white/10 rounded-3xl p-8 shadow-2xl relative overflow-hidden text-center"
+              className="w-full max-w-lg bg-gradient-to-b from-gray-900 to-black border border-white/10 rounded-3xl p-5 md:p-6 shadow-2xl relative overflow-hidden text-center max-h-[92vh] flex flex-col"
             >
-              {/* Pulsing ring visual */}
-              {copilotStatus !== "success" && copilotStatus !== "failed" && (
-                <div className="flex flex-col items-center justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full p-[3px] bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 animate-[spin_3s_linear_infinite] mb-4">
-                    <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
-                      <Loader2 className="animate-spin text-purple-400" size={24} />
+              {/* ⚡ Scrollable Content Body - Fits elegantly on all laptops and screen heights */}
+              <div className="overflow-y-auto pr-1 flex-1 flex flex-col justify-start scrollbar-thin scrollbar-thumb-white/10 scrollbar-track-transparent pb-3">
+                
+                {/* Pulsing ring visual */}
+                {copilotStatus !== "success" && copilotStatus !== "failed" && (
+                  <div className="flex flex-col items-center justify-center my-3 shrink-0">
+                    <div className="w-12 h-12 rounded-full p-[2.5px] bg-gradient-to-tr from-blue-500 via-purple-500 to-pink-500 animate-[spin_3s_linear_infinite] mb-3">
+                      <div className="w-full h-full bg-black rounded-full flex items-center justify-center">
+                        <Loader2 className="animate-spin text-purple-400" size={20} />
+                      </div>
                     </div>
+                    <h4 className="text-md font-black text-white">Co-Pilot Auto-Compiling Video...</h4>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Please keep the newly opened Meta AI browser tab active!</p>
                   </div>
-                  <h4 className="text-lg font-black text-white">Co-Pilot Auto-Compiling Video...</h4>
-                  <p className="text-xs text-gray-400 mt-1">Please keep the newly opened Meta AI browser tab active!</p>
-                </div>
-              )}
-
-              {/* Success Visual */}
-              {copilotStatus === "success" && (
-                <div className="flex flex-col items-center justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 mb-4 shadow-lg shadow-green-500/10 animate-bounce">
-                    <CheckCircle size={32} />
-                  </div>
-                  <h4 className="text-lg font-black text-white">Compilation Complete! 🎉</h4>
-                  <p className="text-xs text-gray-400 mt-1">Stitched two 5s cinematic clips into a seamless 10s master video!</p>
-                </div>
-              )}
-
-              {/* Error Visual */}
-              {copilotStatus === "failed" && (
-                <div className="flex flex-col items-center justify-center mb-6">
-                  <div className="w-16 h-16 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-4">
-                    <AlertCircle size={32} />
-                  </div>
-                  <h4 className="text-lg font-black text-white">Compilation Failed</h4>
-                  <p className="text-xs text-gray-400 mt-1 font-sans">An error occurred in the co-pilot automation pipeline.</p>
-                </div>
-              )}
-
-              {/* Stitching Progress Bar */}
-              {copilotStatus === "stitching" && (
-                <div className="w-full bg-white/5 rounded-full h-2 mb-6 border border-white/5 overflow-hidden">
-                  <div 
-                    className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full transition-all duration-300"
-                    style={{ 
-                      width: stitchProgress.includes("fallback") 
-                        ? "75%" 
-                        : stitchProgress.includes("Clip 1") 
-                          ? `${parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
-                          : `${50 + parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
-                    }}
-                  ></div>
-                </div>
-              )}
-
-              {/* Real-time Logs Console */}
-              <div className="bg-black/60 border border-white/5 rounded-2xl p-4 text-left font-mono text-[11px] text-gray-300 h-48 overflow-y-auto space-y-1.5 mb-6">
-                {copilotLogs.map((log, index) => (
-                  <div key={index} className="flex gap-2 items-start">
-                    <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
-                    <span className={log.includes("successfully") || log.includes("Complete") ? "text-green-400" : log.includes("failed") || log.includes("Failed") || log.includes("error") ? "text-red-400" : "text-gray-300"}>
-                      {log}
-                    </span>
-                  </div>
-                ))}
-                {copilotStatus === "stitching" && stitchProgress && (
-                  <div className="text-blue-300 font-bold">Stitcher Status: {stitchProgress}</div>
                 )}
+
+                {/* Success Visual */}
+                {copilotStatus === "success" && (
+                  <div className="flex flex-col items-center justify-center my-3 shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-green-500/10 border border-green-500/30 flex items-center justify-center text-green-400 mb-3 shadow-lg shadow-green-500/10 animate-bounce">
+                      <CheckCircle size={24} />
+                    </div>
+                    <h4 className="text-md font-black text-white">Compilation Complete! 🎉</h4>
+                    <p className="text-[10px] text-gray-400 mt-0.5">Stitched two 5s cinematic clips into a seamless 10s master video!</p>
+                  </div>
+                )}
+
+                {/* Error Visual */}
+                {copilotStatus === "failed" && (
+                  <div className="flex flex-col items-center justify-center my-3 shrink-0">
+                    <div className="w-12 h-12 rounded-full bg-red-500/10 border border-red-500/30 flex items-center justify-center text-red-400 mb-3">
+                      <AlertCircle size={24} />
+                    </div>
+                    <h4 className="text-md font-black text-white">Compilation Failed</h4>
+                    <p className="text-[10px] text-gray-400 mt-0.5 font-sans">An error occurred in the co-pilot automation pipeline.</p>
+                  </div>
+                )}
+
+                {/* Stitching Progress Bar */}
+                {copilotStatus === "stitching" && (
+                  <div className="w-full bg-white/5 rounded-full h-1.5 mb-4 border border-white/5 overflow-hidden shrink-0">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 via-purple-500 to-pink-500 h-full transition-all duration-300"
+                      style={{ 
+                        width: stitchProgress.includes("fallback") 
+                          ? "75%" 
+                          : stitchProgress.includes("Clip 1") 
+                            ? `${parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
+                            : `${50 + parseInt(stitchProgress.match(/\d+/) || [0]) / 2}%` 
+                      }}
+                    ></div>
+                  </div>
+                )}
+
+                {/* Real-time Logs Console */}
+                <div className="bg-black/60 border border-white/5 rounded-xl p-3 text-left font-mono text-[10px] text-gray-300 h-28 overflow-y-auto space-y-1 mb-3 shrink-0 scrollbar-thin scrollbar-thumb-white/10">
+                  {copilotLogs.map((log, index) => (
+                    <div key={index} className="flex gap-1.5 items-start">
+                      <span className="text-gray-600 shrink-0">[{new Date().toLocaleTimeString()}]</span>
+                      <span className={log.includes("successfully") || log.includes("Complete") ? "text-green-400" : log.includes("failed") || log.includes("Failed") || log.includes("error") ? "text-red-400" : "text-gray-300"}>
+                        {log}
+                      </span>
+                    </div>
+                  ))}
+                  {copilotStatus === "stitching" && stitchProgress && (
+                    <div className="text-blue-300 font-bold mt-0.5">Stitcher Status: {stitchProgress}</div>
+                  )}
+                </div>
+
+                {/* Render success output video! - Highly responsive & aspect-locked */}
+                {copilotStatus === "success" && stitchedVideoUrl && (
+                  <div className="rounded-xl border border-white/10 overflow-hidden bg-black mb-3 aspect-video max-h-48 md:max-h-52 w-full flex items-center justify-center shadow-inner shrink-0">
+                    <video src={stitchedVideoUrl} controls className="w-full h-full object-contain" autoPlay muted loop />
+                  </div>
+                )}
+
               </div>
 
-              {/* Render success output video! */}
-              {copilotStatus === "success" && stitchedVideoUrl && (
-                <div className="rounded-2xl border border-white/10 overflow-hidden bg-black mb-6 aspect-video max-h-60 flex items-center justify-center shadow-inner">
-                  <video src={stitchedVideoUrl} controls className="w-full h-full object-contain" autoPlay muted loop />
-                </div>
-              )}
-
-              {/* Action Triggers */}
-              <div className="flex gap-2">
+              {/* Action Pinned Footer - Never gets cut off */}
+              <div className="flex gap-2 pt-3 border-t border-white/5 shrink-0 mt-2">
                 {copilotStatus === "success" && stitchedVideoUrl && (
                   <a
                     href={stitchedVideoUrl}
                     download="meta-ai-cinematic-10s-storyboard.mp4"
-                    className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-extrabold text-xs transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2.5 px-4 rounded-xl bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-extrabold text-[11px] transition-all shadow-lg shadow-green-500/20 flex items-center justify-center gap-1.5 active:scale-[0.98]"
                   >
                     Download 10s MP4 Video 📥
                   </a>
@@ -1104,7 +1109,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                     setCopilotLogs([])
                     setStitchedVideoUrl('')
                   }}
-                  className="flex-1 py-3 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/5 text-xs font-bold transition-all"
+                  className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white border border-white/5 text-[11px] font-bold transition-all active:scale-[0.98]"
                 >
                   {copilotStatus === "success" ? "Back to Storyboards" : "Close Compiler Panel"}
                 </button>
