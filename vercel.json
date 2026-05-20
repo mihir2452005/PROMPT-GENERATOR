@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    {
+      "source": "/((?!assets/|meta-copilot-extension.zip).*)" ,
+      "destination": "/index.html"
+    }
+  ],
+  "cleanUrls": true
+}
