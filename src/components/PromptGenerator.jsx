@@ -1047,6 +1047,21 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
                     </div>
                     <h4 className="text-md font-black text-white">Compilation Failed</h4>
                     <p className="text-[10px] text-gray-400 mt-0.5 font-sans">An error occurred in the co-pilot automation pipeline.</p>
+                    <div className="flex flex-wrap items-center justify-center gap-2 mt-3">
+                      <button
+                        onClick={() => window.location.reload()}
+                        className="px-4 py-1.5 rounded-lg bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 text-blue-300 text-[10px] font-bold transition-all active:scale-[0.97]"
+                      >
+                        🔄 Refresh Page & Retry
+                      </button>
+                      <a
+                        href="/meta-copilot-extension.zip"
+                        download="meta-copilot-extension.zip"
+                        className="px-4 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-purple-300 text-[10px] font-bold transition-all active:scale-[0.97]"
+                      >
+                        📥 Re-download Extension
+                      </a>
+                    </div>
                   </div>
                 )}
 

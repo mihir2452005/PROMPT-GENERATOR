@@ -1,6 +1,26 @@
 // Automation content script running on Meta AI (meta.ai)
 console.log("Meta AI Co-Pilot Extension: Automation Engine Loaded!");
 
+// Safe message sender — prevents "Extension context invalidated" crashes
+// when the extension is reloaded while automation is running on this tab.
+function safeSendMessage(payload, callback) {
+  try {
+    if (!chrome.runtime?.id) {
+      console.warn("Extension context is dead. Stopping automation.");
+      return;
+    }
+    chrome.runtime.sendMessage(payload, (response) => {
+      if (chrome.runtime.lastError) {
+        console.warn("Runtime error in content_meta:", chrome.runtime.lastError.message);
+        return;
+      }
+      if (callback) callback(response);
+    });
+  } catch (err) {
+    console.warn("Extension context invalidated in content_meta:", err.message);
+  }
+}
+
 // Track existing videos to only detect newly generated clips
 const existingVideos = new Set();
 
@@ -160,8 +180,8 @@ function pollForNewVideo(callback) {
       }
 
       // Notify the React WebApp tab with full error details and retry strategy
-      chrome.runtime.sendMessage({ action: "GET_TASK_DATA" }, (task) => {
-        chrome.runtime.sendMessage({
+      safeSendMessage({ action: "GET_TASK_DATA" }, (task) => {
+        safeSendMessage({
           action: "UPDATE_STAGE",
           updates: {
             logs: [
@@ -193,7 +213,7 @@ function pollForNewVideo(callback) {
 
 // Core execution workflow
 function runAutomation() {
-  chrome.runtime.sendMessage({ action: "GET_TASK_DATA" }, (task) => {
+  safeSendMessage({ action: "GET_TASK_DATA" }, (task) => {
     if (!task || task.status === "completed" || !task.status) {
       console.log("No active automation tasks found.");
       return;
@@ -218,7 +238,7 @@ function runAutomation() {
       typeText(input, task.prompt1);
       
       // Update background status to waiting before clicking send
-      chrome.runtime.sendMessage({
+      safeSendMessage({
         action: "UPDATE_STAGE",
         updates: { 
           status: "waiting_part1",
@@ -247,7 +267,7 @@ function runAutomation() {
       console.log("Injecting Prompt 2 (continuation) into Meta AI...");
       typeText(input, task.prompt2);
 
-      chrome.runtime.sendMessage({
+      safeSendMessage({
         action: "UPDATE_STAGE",
         updates: { 
           status: "waiting_part2",
@@ -272,8 +292,8 @@ function runAutomation() {
 }
 
 function handlePart1Complete(videoUrl) {
-  chrome.runtime.sendMessage({ action: "GET_TASK_DATA" }, (task) => {
-    chrome.runtime.sendMessage({
+  safeSendMessage({ action: "GET_TASK_DATA" }, (task) => {
+    safeSendMessage({
       action: "UPDATE_STAGE",
       updates: {
         part1VideoUrl: videoUrl,
@@ -290,8 +310,8 @@ function handlePart1Complete(videoUrl) {
 }
 
 function handlePart2Complete(videoUrl) {
-  chrome.runtime.sendMessage({ action: "GET_TASK_DATA" }, (task) => {
-    chrome.runtime.sendMessage({
+  safeSendMessage({ action: "GET_TASK_DATA" }, (task) => {
+    safeSendMessage({
       action: "UPDATE_STAGE",
       updates: {
         part2VideoUrl: videoUrl,
@@ -300,7 +320,7 @@ function handlePart2Complete(videoUrl) {
       }
     }, () => {
       // Send final success call to complete execution
-      chrome.runtime.sendMessage({ action: "AUTOMATION_COMPLETE" });
+      safeSendMessage({ action: "AUTOMATION_COMPLETE" });
     });
   });
 }
