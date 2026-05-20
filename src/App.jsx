@@ -3,6 +3,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import Dashboard from './pages/Dashboard'
 import AuthPage from './pages/AuthPage'
+import SettingsPage from './pages/SettingsPage'
 import Navbar from './components/Navbar'
 
 const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || 'YOUR_GOOGLE_CLIENT_ID'
@@ -31,6 +32,14 @@ export default function App() {
                   <Dashboard />
                 </ProtectedRoute>
               } 
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <SettingsPage />
+                </ProtectedRoute>
+              }
             />
           </Routes>
         </Router>
