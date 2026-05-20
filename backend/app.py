@@ -53,7 +53,22 @@ def create_app():
     with app.app_context():
         # Import models so db.create_all knows about them
         from backend.models.storyboard import SavedStoryboard, QueryHistory
+        from backend.models.user import User
         db.create_all()
+
+        # Dynamic Self-Healing Migration to auto-inject the new 'openai_key' column into pre-existing user tables
+        try:
+            from sqlalchemy import inspect, text
+            inspector = inspect(db.engine)
+            # Fetch all columns in the 'user' table
+            user_columns = [col['name'] for col in inspector.get_columns('user')]
+            if 'openai_key' not in user_columns:
+                app.logger.info("🔧 Auto-Migration: Adding missing 'openai_key' column to 'user' table...")
+                db.session.execute(text('ALTER TABLE "user" ADD COLUMN openai_key VARCHAR(255)'))
+                db.session.commit()
+                app.logger.info("✅ Database migration complete!")
+        except Exception as migration_error:
+            app.logger.error(f"❌ Auto-Migration failed: {str(migration_error)}")
 
     @app.before_request
     def log_incoming_request():
