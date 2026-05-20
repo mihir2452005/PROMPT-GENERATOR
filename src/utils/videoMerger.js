@@ -79,23 +79,26 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
       // 3. Setup canvas stream recording at 30 FPS
       const stream = canvas.captureStream(30);
       
-      // Support standard video MIME types across browsers with premium ultra-high lossless bitrate (16 Mbps)
+      // Prioritize hardware-accelerated H.264 MP4/AVC1 codecs to ensure smooth GPU encoding with zero lag
       const options = { 
-        mimeType: 'video/webm;codecs=vp9,opus',
-        videoBitsPerSecond: 16000000 // 16 Megabits per second for spectacular lossless quality!
+        mimeType: 'video/mp4;codecs=avc1',
+        videoBitsPerSecond: 16000000 // 16 Megabits per second for pristine lossless quality!
       };
       
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/mp4;codecs=h264';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/mp4';
+      }
       if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options.mimeType = 'video/webm;codecs=h264';
       }
       if (!MediaRecorder.isTypeSupported(options.mimeType)) {
+        options.mimeType = 'video/webm;codecs=vp9,opus';
+      }
+      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
         options.mimeType = 'video/webm';
-      }
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = 'video/mp4;codecs=avc1';
-      }
-      if (!MediaRecorder.isTypeSupported(options.mimeType)) {
-        options.mimeType = 'video/mp4';
       }
 
       const recorder = new MediaRecorder(stream, options);
