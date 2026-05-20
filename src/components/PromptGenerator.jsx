@@ -770,20 +770,59 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
               </p>
 
               <div className="space-y-4 mb-6">
-                {/* Step 1 */}
+                {/* Step 1 - direct folder install via File System Access API */}
                 <div className="flex gap-3">
                   <div className="w-6 h-6 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 flex items-center justify-center text-xs font-bold shrink-0">1</div>
-                  <div>
-                    <h5 className="text-xs font-bold text-white">Download & Unzip Extension</h5>
-                    <p className="text-[10px] text-gray-400 mt-0.5">Download the package below and extract it to any folder on your computer.</p>
-                    <a
-                      href="/meta-copilot-extension.zip"
-                      download="meta-copilot-extension.zip"
-                      className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[10px] font-bold text-purple-200 transition-all active:scale-[0.98]"
-                    >
-                      <Sparkles size={11} className="text-purple-300" />
-                      Download Extension (.zip)
-                    </a>
+                  <div className="w-full">
+                    <h5 className="text-xs font-bold text-white">Install Extension Files</h5>
+                    <p className="text-[10px] text-gray-400 mt-0.5 mb-2">
+                      {('showDirectoryPicker' in window)
+                        ? 'Pick any empty folder on your PC - we will write all 4 extension files directly into it. No ZIP, no extraction!'
+                        : 'Download the ZIP below and extract it to a folder on your computer.'}
+                    </p>
+                    {('showDirectoryPicker' in window) ? (
+                      <div className="flex flex-col gap-1.5">
+                        <button
+                          onClick={async () => {
+                            try {
+                              const dirHandle = await window.showDirectoryPicker({ mode: 'readwrite' })
+                              const extFiles = ['manifest.json', 'background.js', 'content_meta.js', 'content_webapp.js']
+                              for (const fileName of extFiles) {
+                                const res = await fetch('/extension-files/' + fileName)
+                                const blob = await res.blob()
+                                const fileHandle = await dirHandle.getFileHandle(fileName, { create: true })
+                                const writable = await fileHandle.createWritable()
+                                await writable.write(blob)
+                                await writable.close()
+                              }
+                              alert('Extension files installed successfully! Now load that folder using Load unpacked in your browser extensions page.')
+                            } catch (err) {
+                              if (err.name !== 'AbortError') alert('Install failed: ' + err.message)
+                            }
+                          }}
+                          className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-500 hover:to-blue-500 text-white text-[11px] font-bold transition-all active:scale-[0.98] shadow-lg shadow-purple-500/20"
+                        >
+                          <Sparkles size={13} />
+                          Choose Folder and Install Directly (Recommended)
+                        </button>
+                        <a
+                          href="/meta-copilot-extension.zip"
+                          download="meta-copilot-extension.zip"
+                          className="inline-flex items-center justify-center gap-1 text-[9px] text-gray-600 hover:text-gray-400 transition-colors py-1"
+                        >
+                          Or download as .zip instead
+                        </a>
+                      </div>
+                    ) : (
+                      <a
+                        href="/meta-copilot-extension.zip"
+                        download="meta-copilot-extension.zip"
+                        className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl bg-purple-500/20 hover:bg-purple-500/30 border border-purple-500/30 text-[11px] font-bold text-purple-200 transition-all active:scale-[0.98]"
+                      >
+                        <Sparkles size={13} className="text-purple-300" />
+                        Download Extension (.zip)
+                      </a>
+                    )}
                   </div>
                 </div>
 

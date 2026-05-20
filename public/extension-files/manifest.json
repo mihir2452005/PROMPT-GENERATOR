@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Meta AI Co-Pilot Extension",
+  "version": "1.0.0",
+  "description": "Auto-compiles and extracts sequential 5s storyboards into a 10s video on Meta AI.",
+  "permissions": [
+    "activeTab",
+    "storage",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://localhost/*",
+    "*://*.onrender.com/*",
+    "https://*.meta.ai/*"
+  ],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": [
+        "*://localhost/*",
+        "*://*.onrender.com/*"
+      ],
+      "js": ["content_webapp.js"],
+      "run_at": "document_end"
+    },
+    {
+      "matches": [
+        "https://*.meta.ai/*"
+      ],
+      "js": ["content_meta.js"],
+      "run_at": "document_end"
+    }
+  ]
+}
