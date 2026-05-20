@@ -33,6 +33,16 @@ export default function HistorySection({ onSelectQuery, refreshTrigger }) {
     }
   }
 
+  const deleteHistoryItem = async (id, e) => {
+    e.stopPropagation()
+    try {
+      await api.delete(`/history/${id}`)
+      setHistory(prev => prev.filter(item => item.id !== id))
+    } catch (err) {
+      console.error('Failed to delete history item', err)
+    }
+  }
+
   return (
     <div className="p-6 rounded-3xl bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl flex flex-col gap-4">
       <div className="flex items-center justify-between">
@@ -94,8 +104,17 @@ export default function HistorySection({ onSelectQuery, refreshTrigger }) {
                     Mood: {item.mood}
                   </p>
                 </div>
-                <div className="p-1.5 rounded-lg bg-white/5 text-gray-400 group-hover:text-white group-hover:bg-accent/20 transition-all ml-2">
-                  <ArrowRight size={12} />
+                <div className="flex items-center gap-1.5 ml-2">
+                  <button
+                    onClick={(e) => deleteHistoryItem(item.id, e)}
+                    className="p-1.5 rounded-lg bg-red-500/10 hover:bg-red-500/20 border border-transparent hover:border-red-500/20 text-red-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                    title="Delete this query"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                  <div className="p-1.5 rounded-lg bg-white/5 text-gray-400 group-hover:text-white group-hover:bg-accent/20 transition-all">
+                    <ArrowRight size={12} />
+                  </div>
                 </div>
               </motion.div>
             ))}

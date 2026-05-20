@@ -21,3 +21,15 @@ def clear_history():
     QueryHistory.query.filter_by(user_id=user_id).delete()
     db.session.commit()
     return jsonify({'message': 'Query history cleared'})
+
+@history_bp.route('/history/<int:history_id>', methods=['DELETE'])
+@jwt_required()
+def delete_history_item(history_id):
+    user_id = int(get_jwt_identity())
+    item = QueryHistory.query.filter_by(id=history_id, user_id=user_id).first()
+    if not item:
+        return jsonify({'error': 'History item not found'}), 404
+    db.session.delete(item)
+    db.session.commit()
+    return jsonify({'message': 'History item deleted'})
+
