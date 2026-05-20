@@ -168,28 +168,29 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     }
     window.addEventListener("META_COPILOT_INSTALLED", handleExtensionInstalledEvent)
 
-    // 3. Listen for co-pilot bridge updates
-    const handleBridgeMessages = (event) => {
-      if (event.source !== window) return
-      
-      if (event.data && event.data.type === "COPILOT_PROGRESS_UPDATE") {
-        if (event.data.updates.logs) {
-          setCopilotLogs(event.data.updates.logs)
-        }
-        if (event.data.updates.status) {
-          setCopilotStatus(event.data.updates.status)
-        }
-      } 
-      
-      else if (event.data && event.data.type === "COPILOT_SUCCESS") {
-        handleAutoStitchVideos(event.data.part1VideoUrl, event.data.part2VideoUrl)
+    // 3. Listen for co-pilot bridge updates via CustomEvents
+    const handleProgressUpdate = (event) => {
+      const updates = event.detail
+      if (updates.logs) {
+        setCopilotLogs(updates.logs)
       }
-    };
-    window.addEventListener("message", handleBridgeMessages)
+      if (updates.status) {
+        setCopilotStatus(updates.status)
+      }
+    }
+
+    const handleSuccessUpdate = (event) => {
+      const data = event.detail
+      handleAutoStitchVideos(data.part1VideoUrl, data.part2VideoUrl)
+    }
+
+    window.addEventListener("COPILOT_PROGRESS_UPDATE_EVENT", handleProgressUpdate)
+    window.addEventListener("COPILOT_SUCCESS_EVENT", handleSuccessUpdate)
 
     return () => {
       window.removeEventListener("META_COPILOT_INSTALLED", handleExtensionInstalledEvent)
-      window.removeEventListener("message", handleBridgeMessages)
+      window.removeEventListener("COPILOT_PROGRESS_UPDATE_EVENT", handleProgressUpdate)
+      window.removeEventListener("COPILOT_SUCCESS_EVENT", handleSuccessUpdate)
     }
   }, [])
 
@@ -244,12 +245,10 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     setStitchProgress("")
     setIsAutoCompiling(true)
 
-    // Send compile postMessage event that is captured by content_webapp.js
-    window.postMessage({
-      type: "START_AUTO_COMPILE",
-      prompt1,
-      prompt2
-    }, "*")
+    // Send compile custom event that is captured by content_webapp.js
+    window.dispatchEvent(new CustomEvent("START_AUTO_COMPILE_EVENT", {
+      detail: { prompt1, prompt2 }
+    }))
   }
 
   // Handle click on "I Loaded It! Ready to Compile"

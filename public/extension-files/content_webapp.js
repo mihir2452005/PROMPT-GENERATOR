@@ -13,41 +13,38 @@ if (!metaTag || metaTag.getAttribute("content") !== "MetaPrompt Studio") {
   // Dispatch a custom event to notify React immediately on mount
   window.dispatchEvent(new CustomEvent("META_COPILOT_INSTALLED"));
 
-  // 2. Listen to compile request messages dispatched from the React Web App
-  window.addEventListener("message", (event) => {
-    // Only accept trustable messages from our own window
-    if (event.source !== window) return;
-
-    if (event.data && event.data.type === "START_AUTO_COMPILE") {
-      console.log("Bridge received webapp trigger:", event.data);
-      chrome.runtime.sendMessage({
-        action: "START_AUTOMATION",
-        prompt1: event.data.prompt1,
-        prompt2: event.data.prompt2
-      }, (response) => {
-        console.log("Background initiation response:", response);
-      });
-    }
+  // 2. Listen to compile request events dispatched from the React Web App
+  window.addEventListener("START_AUTO_COMPILE_EVENT", (event) => {
+    const data = event.detail;
+    console.log("Bridge received webapp trigger event:", data);
+    chrome.runtime.sendMessage({
+      action: "START_AUTOMATION",
+      prompt1: data.prompt1,
+      prompt2: data.prompt2
+    }, (response) => {
+      console.log("Background initiation response:", response);
+    });
   });
 
   // 3. Listen to automation progress updates sent back from the background worker
   chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
     if (message.action === "LOG_PROGRESS") {
-      // Pass progress up to the React app window
-      window.postMessage({
-        type: "COPILOT_PROGRESS_UPDATE",
-        updates: message.updates
-      }, "*");
+      // Pass progress up to the React app window via CustomEvent
+      window.dispatchEvent(new CustomEvent("COPILOT_PROGRESS_UPDATE_EVENT", {
+        detail: message.updates
+      }));
     } 
     
     else if (message.action === "COMPILATION_COMPLETE") {
-      // Pass results to React
-      window.postMessage({
-        type: "COPILOT_SUCCESS",
-        part1VideoUrl: message.part1VideoUrl,
-        part2VideoUrl: message.part2VideoUrl
-      }, "*");
+      // Pass results to React via CustomEvent
+      window.dispatchEvent(new CustomEvent("COPILOT_SUCCESS_EVENT", {
+        detail: {
+          part1VideoUrl: message.part1VideoUrl,
+          part2VideoUrl: message.part2VideoUrl
+        }
+      }));
     }
   });
 }
+
 
