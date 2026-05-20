@@ -183,9 +183,9 @@ def generate_procedural_prompts(topic, mood, platform, count):
 
     return storyboards
 
-def generate_ai_prompts(topic, mood, platform='general', count=5):
+def generate_ai_prompts(topic, mood, platform='general', count=5, user_api_key=None):
     """Generate multiple high-quality, story-driven, timeline-based video scripts optimized for a specific platform."""
-    api_key = os.getenv('OPENAI_API_KEY')
+    api_key = user_api_key or os.getenv('OPENAI_API_KEY')
     platform_info = PLATFORM_GUIDES.get(platform, PLATFORM_GUIDES['general'])
 
     if not api_key:

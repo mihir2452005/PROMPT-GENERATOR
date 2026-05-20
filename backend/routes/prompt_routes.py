@@ -17,7 +17,19 @@ def generate():
     if not topic or not mood:
         return jsonify({'error': 'Topic and mood are required'}), 400
 
-    prompts = generate_ai_prompts(topic, mood, platform, count)
+    from backend.models.user import User
+    from flask_jwt_extended import get_jwt_identity
+    
+    user_api_key = None
+    try:
+        user_id = int(get_jwt_identity())
+        user = User.query.get(user_id)
+        if user and user.openai_key:
+            user_api_key = user.openai_key
+    except Exception as e:
+        print(f"Failed to fetch user API key: {str(e)}")
+
+    prompts = generate_ai_prompts(topic, mood, platform, count, user_api_key=user_api_key)
 
     # Save to search query history
     try:

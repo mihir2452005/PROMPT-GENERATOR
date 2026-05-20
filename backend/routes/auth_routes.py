@@ -105,3 +105,42 @@ def google_login():
         return jsonify({'error': f'Google verification failed: {str(e)}'}), 401
     except Exception as e:
         return jsonify({'error': f'Google authentication service error: {str(e)}'}), 500
+
+from flask_jwt_extended import jwt_required, get_jwt_identity
+
+@auth_bp.route('/settings/api-key', methods=['POST'])
+@jwt_required()
+def save_api_key():
+    data = request.json or {}
+    api_key = data.get('openai_key')
+    
+    # Optional: validate basic structure of API key if provided
+    if api_key and not api_key.startswith('sk-'):
+        return jsonify({'error': 'Invalid key format. Key must start with "sk-"'}), 400
+        
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+        
+    user.openai_key = api_key
+    db.session.commit()
+    return jsonify({'message': 'API Key updated successfully'})
+
+@auth_bp.route('/settings/api-key', methods=['GET'])
+@jwt_required()
+def get_api_key():
+    user_id = int(get_jwt_identity())
+    user = User.query.get(user_id)
+    if not user:
+        return jsonify({'error': 'User not found'}), 404
+        
+    # Mask API key for client-side privacy (e.g. sk-proj-...xxxx)
+    masked_key = ""
+    if user.openai_key:
+        masked_key = f"{user.openai_key[:8]}...{user.openai_key[-4:]}" if len(user.openai_key) > 12 else user.openai_key
+        
+    return jsonify({
+        'has_key': bool(user.openai_key),
+        'openai_key': masked_key
+    })
