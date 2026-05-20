@@ -40,14 +40,14 @@ FALLBACK_VIDEOS = [
 
 def select_fallback_video(prompt: str) -> str:
     prompt_lower = prompt.lower()
-    best_match = None
+    best_match: str | None = None
     max_matches = 0
     
     for item in FALLBACK_VIDEOS:
         matches = sum(1 for keyword in item["keywords"] if keyword in prompt_lower)
         if matches > max_matches:
             max_matches = matches
-            best_match = item["url"]
+            best_match = str(item["url"])
             
     # Default high-fidelity scenic fallback if no keywords match
     return best_match or "http://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4"

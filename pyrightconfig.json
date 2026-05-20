@@ -5,10 +5,19 @@
   "exclude": [
     "**/node_modules",
     "**/__pyrefly_virtual__",
-    "**/__pyrefly_virtual__/**"
+    "**/__pyrefly_virtual__/**",
+    "src",
+    "src/**"
   ],
   "extraPaths": [
-    ".",
-    "./backend"
+    "."
+  ],
+  "executionEnvironments": [
+    {
+      "root": ".",
+      "extraPaths": [
+        "."
+      ]
+    }
   ]
 }
