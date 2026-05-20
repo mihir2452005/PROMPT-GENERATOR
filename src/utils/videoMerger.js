@@ -76,9 +76,10 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
       // Start recording
       recorder.start();
 
-      // Seek-based offscreen frame rendering pipeline (30 FPS)
+      // Seek-based offscreen frame rendering pipeline (30 FPS) with precise timing synchronization
       const fps = 30;
       const frameDuration = 1 / fps;
+      const targetFrameMs = 1000 / fps; // 33.33ms
 
       async function renderVideoFrames(videoEl, startProgress, endProgress, progressMessage) {
         let duration = videoEl.duration;
@@ -90,6 +91,7 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
         console.log(`Rendering ${totalFrames} frames for video source...`);
 
         for (let i = 0; i < totalFrames; i++) {
+          const frameStartTime = performance.now();
           const seekTime = i * frameDuration;
           videoEl.currentTime = seekTime;
 
@@ -106,6 +108,11 @@ export async function mergeVideos(videoUrl1, videoUrl2, onProgress) {
 
           // Draw target video frame onto offscreen canvas
           ctx.drawImage(videoEl, 0, 0, width, height);
+
+          // Force precise 30 FPS timing capture to sync with MediaRecorder's real-time capture
+          const elapsed = performance.now() - frameStartTime;
+          const sleepTime = Math.max(4, targetFrameMs - elapsed);
+          await new Promise(res => setTimeout(res, sleepTime));
 
           // Report granular progress updates
           if (onProgress) {
