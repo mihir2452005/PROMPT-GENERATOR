@@ -123,3 +123,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
   }
 });
+
+// 🔄 Instant Programmatic Reload: Reloads the entire extension immediately when the user clicks the toolbar icon next to the address bar!
+chrome.action.onClicked.addListener((tab) => {
+  console.log("Toolbar icon clicked! Triggering programmatic extension reload...");
+  chrome.runtime.reload();
+});
