@@ -1,6 +1,6 @@
-
 import os
 import json
+import random
 from openai import OpenAI
 
 PLATFORM_GUIDES = {
@@ -67,81 +67,130 @@ def ensure_meta_ai_prefix(prompts, platform):
         return processed
     return prompts
 
+def generate_procedural_prompts(topic, mood, platform, count):
+    """
+    Generates beautiful, highly detailed, procedurally randomized 2-part cinematic 
+    video prompts. This acts as the ultimate fallback engine when OpenAI quota is exhausted.
+    Ensures that every generation round produces completely unique prompt details!
+    """
+    platform_info = PLATFORM_GUIDES.get(platform, PLATFORM_GUIDES['general'])
+    engine_name = platform_info['name']
+    prefix = "Imagine a video of: " if platform == 'meta_ai' else platform_info['example_prefix']
+    
+    # Large arrays of photorealistic descriptive elements to blend procedurally
+    concepts = [
+        "A grand visual masterpiece presenting {topic} under breathtaking volumetric {mood} conditions.",
+        "An intimate visual exploration focusing on the fine, microscopic details and physics of {topic} in a deep {mood} theme.",
+        "An epic cinematic landscape centered around {topic}, glowing with rich {mood} color tones.",
+        "A stylized, artistic presentation of {topic} capturing fluid motion and highly atmospheric {mood} weather effects.",
+        "A futuristic, dramatic vision of {topic} wrapped in volumetric lighting beams and rich {mood} shadows."
+    ]
+
+    p1_actions = [
+        "cinematic close-up capturing {topic} illuminated by sweeping light leaks as ambient {mood} glows slowly filter across the lens.",
+        "extreme close-up on the complex, glistening textures of {topic} with tiny dust motes floating lazily in a {mood} spotlight.",
+        "hyper-detailed slow-motion focus on the central subject of {topic} as swirling volumetric mist wraps elegantly around the base.",
+        "low-angle establishing view highlighting the silhouette of {topic} contrasting beautifully against a moody {mood} sunset.",
+        "dynamic slow-tracking shot discovering {topic} amidst a dark, atmospheric environment lit by neon {mood} volumetric beams."
+    ]
+
+    p1_cameras = [
+        "Smooth 3D gimbal tracking pan moving slowly right to left.",
+        "Slow, delicate forward push along the Z-axis with ultra-shallow depth of field.",
+        "Static locked-off composition with organic camera lens vibrations.",
+        "Sweeping 35mm wide-angle dolly-in establishing perspective.",
+        "Slow focal transition pulling from background blur into macro clarity."
+    ]
+
+    p2_actions = [
+        "The scene undergoes a dramatic scale change as {topic} animates, sending bright glowing embers and concrete particles flying in bullet-time slow motion.",
+        "Focus smoothly transitions as a pristine, clear water droplet slides off {topic}, refracting the rich {mood} gradient sky.",
+        "Volumetric god-rays pierce through dark clouds, dynamically lighting up {topic} and casting long, highly detailed ray-traced shadows.",
+        "The camera reaches its maximum height, showcasing the breathtaking expanse of the sunset casting gold and violet hues over {topic}.",
+        "A sudden change in physical dynamics occurs, making floating particles around {topic} freeze in mid-air in a floating spherical gravity field."
+    ]
+
+    p2_cameras = [
+        "Seamless continuous crane shot pulling back and rising upwards in a grand sweeping motion.",
+        "Slow focal transition with a gentle 360-degree camera rotation around the subject.",
+        "Dynamic tracking dolly-out maintaining identical focus and physical alignment.",
+        "Elegant horizontal pan towards the blinding glowing horizon.",
+        "Slow, majestic push forward through the clearing atmospheric haze."
+    ]
+
+    render_modifiers = [
+        "Unreal Engine 5 render style, 8k resolution, ray-traced ambient occlusion, soft dramatic depth of field, golden anamorphic lens flares, highly photorealistic --ar 16:9",
+        "ultra-high-definition 85mm camera lens detail, IMAX aspect ratio, vivid color grading, soft volumetric illumination, photorealistic textures --ar 16:9",
+        "hyper-realistic material shaders, extreme macro rendering, chromatic aberration, ray-traced reflections, highly polished cinematic scaling --ar 16:9",
+        "bullet-time super slow-motion physics, volumetric fog shaders, soft twilight color transitions, cinematic masterpiece level detail --ar 16:9"
+    ]
+
+    fluid_effects = [
+        "Volumetric clouds, raytraced reflections, dynamic atmospheric weather simulation.",
+        "Glistening wet trails, liquid physics simulation, soft cinematic focus-pull.",
+        "Airborne moisture particles, golden lens flares, ambient volumetric fog.",
+        "High-velocity concrete debris, glowing particle systems, bullet-time slow-motion.",
+        "Volumetric god-rays, gradient atmospheric twilight, long detailed shadows."
+    ]
+
+    storyboards = []
+    
+    # Shuffle lists to maximize randomness
+    random.shuffle(concepts)
+    random.shuffle(p1_actions)
+    random.shuffle(p1_cameras)
+    random.shuffle(p2_actions)
+    random.shuffle(p2_cameras)
+    random.shuffle(render_modifiers)
+    random.shuffle(fluid_effects)
+
+    titles = [
+        "The Epic Opening", "The Micro & Macro Focus", "The Atmospheric Transition",
+        "The Dynamic Action Run", "The Cinematic Horizon", "The Ethereal Glow",
+        "The Volumetric Rise", "The Temporal Flow", "The Infinite Sequence"
+    ]
+    random.shuffle(titles)
+
+    for i in range(count):
+        title = titles[i % len(titles)]
+        concept = concepts[i % len(concepts)].format(topic=topic, mood=mood)
+        p1_act = p1_actions[i % len(p1_actions)].format(topic=topic, mood=mood)
+        p1_cam = p1_cameras[i % len(p1_cameras)]
+        p2_act = p2_actions[i % len(p2_actions)].format(topic=topic, mood=mood)
+        p2_cam = p2_cameras[i % len(p2_cameras)]
+        modifier = render_modifiers[i % len(render_modifiers)]
+        fluid = fluid_effects[i % len(fluid_effects)]
+        
+        # Build 100-word highly descriptive paragraph prompts
+        prompt1_paragraph = f"{prefix}A breathtaking, highly detailed {p1_act} The camera executes a {p1_cam.lower()} {modifier}"
+        prompt2_paragraph = f"{prefix}Seamless continuous video sequence following previous shot, maintaining identical subject, lighting, and style parameters. {p2_act} The camera completes a {p2_cam.lower()} {modifier}"
+        
+        sb = (
+            f"🎬 **Storyboard: {title}**\n"
+            f"**Visual Concept**: {concept}\n"
+            f"**Camera Trajectory**: {p1_cam} transitioning to {p2_cam.lower()}\n"
+            f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
+            f"- **Action**: Cinematic view showing {p1_act}\n"
+            f"- **Camera**: {p1_cam}\n"
+            f"- **{engine_name} Prompt**: `{prompt1_paragraph}`\n"
+            f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
+            f"- **Action**: {p2_act}\n"
+            f"- **Camera**: {p2_cam}\n"
+            f"- **{engine_name} Prompt**: `{prompt2_paragraph}`\n"
+            f"**Fluid Effects**: {fluid}"
+        )
+        storyboards.append(sb)
+
+    return storyboards
+
 def generate_ai_prompts(topic, mood, platform='general', count=5):
     """Generate multiple high-quality, story-driven, timeline-based video scripts optimized for a specific platform."""
     api_key = os.getenv('OPENAI_API_KEY')
     platform_info = PLATFORM_GUIDES.get(platform, PLATFORM_GUIDES['general'])
 
-    # Rich multi-part fallback prompts (Part 1 and Part 2) to guarantee a spectacular offline experience
-    fallback_prompts = [
-        f"🎬 **Storyboard: The Epic Opening**\n"
-        f"**Visual Concept**: A grand visual masterpiece showing {topic} with a strong {mood} style.\n"
-        f"**Camera Trajectory**: Dynamic cinematic pan seamlessly tracking from close up to establishing wide-angle.\n"
-        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
-        f"- **Action**: Cinematic close-up on the central details of {topic} as atmospheric {mood} light flares slowly pass across the lens.\n"
-        f"- **Camera**: Smooth 3D gimbal tracking pan moving right to left.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: An epic, photorealistic cinematic close-up shot capturing {topic} illuminated by warm, sweeping volumetric {mood} light beams. Slow-moving light leaks and golden anamorphic lens flares slice elegantly across an ultra-high-definition 85mm camera lens. The atmosphere is filled with micro-fine floating dust motes glowing in the volumetric rays. Ultra-shallow depth of field, sharp textures, Unreal Engine 5 render style, 8k resolution, cinematic scale, high-end production --ar 16:9`\n"
-        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
-        f"- **Action**: The camera pulls back dramatically, seamlessly revealing the entire glowing expanse of the setting under changing lighting transitions.\n"
-        f"- **Camera**: Dynamic crane shot rising up and back, maintaining continuous subject focus.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following previous close-up shot. The camera dolly-outs smoothly in a grand sweeping crane motion to fully reveal {topic} standing majestically amidst an expansive, jaw-dropping cinematic landscape matching the powerful {mood} mood. The glowing sunset changes color dynamic in real-time, casting extremely long, detailed ray-traced shadows across the damp ground. Photorealistic, 8k resolution, IMAX ratio --ar 16:9`\n"
-        f"**Fluid Effects**: Volumetric clouds, raytraced reflections.",
-
-        f"🎬 **Storyboard: The Micro & Macro Focus**\n"
-        f"**Visual Concept**: An intimate view focusing on the fine textures of {topic} reflecting a {mood} ambient palette.\n"
-        f"**Camera Trajectory**: Focus pull transitioning from abstract background bokeh into macro level clarity.\n"
-        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
-        f"- **Action**: Extreme close-up of {topic} surfaces, catching soft circular light rays bouncing off organic edges.\n"
-        f"- **Camera**: Slow, delicate forward push along the Z-axis.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A breathtaking extreme macro focus-pull shot exploring the hyper-detailed fine surface textures of {topic} with absolute precision. The soft ambient lighting glows with a serene {mood} aesthetic, creating gorgeous, soft circular bokeh reflections in the background. The camera moves forward delicately on a microscopic scale, highlighting crisp edges, complex material patterns, and soft chromatic aberration. Photorealistic, ray-traced ambient occlusion, masterfully detailed, 8k resolution --ar 16:9`\n"
-        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
-        f"- **Action**: Focus smoothly shifts from the front texture to reveal a larger moving subject or water droplet sliding off {topic}.\n"
-        f"- **Camera**: Slow focal transition with a gentle camera rotation.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence continuing the previous macro shot. The focus pulls smoothly backward to reveal a crystal-clear, highly detailed water droplet sliding elegantly down the surface of {topic}. The droplet refracts the colorful {mood} sky beautifully, and leaves a glistening wet trail behind it with realistic fluid physics. The camera orbits gently with 360-degree rotation. Super slow-motion, liquid physics simulation, hyper-realistic, 8k resolution --ar 16:9`\n"
-        f"**Fluid Effects**: Water droplet simulation, cinematic focus-pull.",
-
-        f"🎬 **Storyboard: The Atmospheric Transition**\n"
-        f"**Visual Concept**: A dynamic sequence showcasing {topic} undergoing a magical environmental transition reflecting the {mood} theme.\n"
-        f"**Camera Trajectory**: Static tripod position with sweeping panning movement.\n"
-        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
-        f"- **Action**: The scene starts with {topic} shrouded in deep, heavy {mood} shadows, mist swirling at the base.\n"
-        f"- **Camera**: Static locked-off composition with subtle camera vibrations.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: An atmospheric, dark cinematic shot showing {topic} shrouded in heavy, dense, volumetric {mood} fog and swirling low-lying mist. The locked-off tripod camera captures subtle environmental wind vibrations, making the mist twist and curl realistically around the base of {topic}. Shadowy, moody lighting highlights fine moisture textures on the surface. Hyper-realistic fog physics, volumetric illumination, 8k resolution, cinematic masterpiece --ar 16:9`\n"
-        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
-        f"- **Action**: Mist begins to thin rapidly as powerful glowing light rays pierce through the clouds, lighting up {topic}.\n"
-        f"- **Camera**: Slow tracking dolly-in through the thinning haze.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous atmospheric shot. The dense mist begins to thin rapidly as dramatic, bright volumetric god-rays pierce through dark clouds, dynamically illuminating {topic} with brilliant glowing highlights. The camera tracks forward in a slow, elegant dolly motion through the vanishing haze, capturing millions of glowing airborne moisture particles. Dynamic atmospheric weather simulation, cinematic masterpiece, 8k resolution --ar 16:9`\n"
-        f"**Fluid Effects**: Realistic mist simulation, particle wind.",
-
-        f"🎬 **Storyboard: The Dynamic Action Run**\n"
-        f"**Visual Concept**: An epic, high-energy action tracking shot centered around {topic} with a powerful, cinematic {mood} undertone.\n"
-        f"**Camera Trajectory**: High speed horizontal tracking shot alongside the main subject.\n"
-        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
-        f"- **Action**: Energetic movement begins instantly, sparks and dust flying off {topic} as it animates into action.\n"
-        f"- **Camera**: Fast tracking shot moving horizontally.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A high-speed, dynamic tracking shot running alongside {topic} as it bursts into powerful, high-energy action. Glowing orange sparks, concrete dust, and atmospheric debris fly off {topic} in all directions, captured with realistic motion blur and high velocity. The scene is illuminated by dramatic neon {mood} spotlights in a dark industrial warehouse. Hyper-realistic particle physics, high-speed camera, 8k resolution, IMAX aspect ratio --ar 16:9`\n"
-        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
-        f"- **Action**: A sudden slow-motion drop where all sparks freeze in the air in bullet-time around {topic}.\n"
-        f"- **Camera**: Orbiting 360-degree rotational camera movement in super slow motion.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous high-speed tracking shot. The high-speed action instantly drops into a super slow-motion bullet-time sequence. The glowing sparks and debris freeze in mid-air in a perfect floating sphere around {topic}. The camera orbits in a smooth, high-fidelity 360-degree rotation showing the dynamic depth of the frozen particles. Photorealistic, 8k resolution, cinematic masterpiece --ar 16:9`\n"
-        f"**Fluid Effects**: High-speed particle system, custom bullet-time simulation.",
-
-        f"🎬 **Storyboard: The Cinematic Horizon**\n"
-        f"**Visual Concept**: A highly emotional, artistic visualization of {topic} that brings out a deep, lingering {mood} feeling.\n"
-        f"**Camera Trajectory**: High vertical rise transitioning into a peaceful sweeping horizon.\n"
-        f"**Part 1 Video Prompt (0:00 - 0:05)**:\n"
-        f"- **Action**: Close silhouette of {topic} resting against a gorgeous, sweeping gradient background of {mood} sky.\n"
-        f"- **Camera**: Slow, rhythmic vertical crane rising upwards.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: A low-angle close-up silhouette shot of {topic} resting peacefully against an expansive, gorgeous background sky painted in cinematic, gradient HSL colors of {mood}. The camera rises vertically in a slow, highly rhythmic crane motion, capturing majestic volumetric light leaks that shimmer dynamically. Anamorphic lens flare, photorealistic, 8k resolution, cinematic aesthetic --ar 16:9`\n"
-        f"**Part 2 Video Prompt (0:05 - 0:10)** (Seamless Continuation):\n"
-        f"- **Action**: The camera reaches the peak of the crane, fully capturing a breathtaking sunset/sunrise casting long gold shadows across the horizon.\n"
-        f"- **Camera**: Slow, elegant panning shot towards the sun.\n"
-        f"- **Meta AI/Engine Prompt**: `Imagine a video of: Seamless continuous video sequence following the previous crane shot. The camera reaches the peak of its crane height, smoothly transitioning into a slow, elegant panning shot facing the blinding glowing sun over the horizon. The horizon casts a warm golden hue over the entire setting, creating long, beautifully detailed shadows. Cinematic lens flare, atmospheric haze, photorealistic, 8k resolution --ar 16:9`\n"
-        f"**Fluid Effects**: Golden lens flares, atmospheric dust."
-    ]
-
     if not api_key:
-        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
+        print("[WARNING] OPENAI_API_KEY environment variable is empty. Launching high-quality Procedural Fallback Generator...")
+        return ensure_meta_ai_prefix(generate_procedural_prompts(topic, mood, platform, count), platform)
 
     client = OpenAI(api_key=api_key)
 
@@ -244,12 +293,14 @@ Example output format:
         if len(valid_prompts) > 0:
             return ensure_meta_ai_prefix(valid_prompts[:count], platform)
 
-        # Last resort: return the fallback prompts so user gets a pristine 5-card experience
-        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
+        print("[WARNING] OpenAI response parsing failed. Activating Dynamic Procedural Fallback Engine...")
+        return ensure_meta_ai_prefix(generate_procedural_prompts(topic, mood, platform, count), platform)
 
     except Exception as e:
-        # Fallback on any error to ensure uninterrupted high-quality user experience
-        return ensure_meta_ai_prefix(fallback_prompts[:count], platform)
+        print(f"[CRITICAL ERROR] OpenAI generation failed: {str(e)}")
+        print("[SYSTEM NOTICE] Automatically falling back to our high-fidelity, randomized Procedural Prompt Generation engine...")
+        # Fallback on any error (like RateLimit quota 429) to ensure uniquely generated dynamic prompts
+        return ensure_meta_ai_prefix(generate_procedural_prompts(topic, mood, platform, count), platform)
 
 def get_supported_platforms():
     """Return list of supported platforms for the frontend dropdown."""
