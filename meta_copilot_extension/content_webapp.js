@@ -17,13 +17,33 @@ if (!metaTag || metaTag.getAttribute("content") !== "MetaPrompt Studio") {
   window.addEventListener("START_AUTO_COMPILE_EVENT", (event) => {
     const data = event.detail;
     console.log("Bridge received webapp trigger event:", data);
-    chrome.runtime.sendMessage({
-      action: "START_AUTOMATION",
-      prompt1: data.prompt1,
-      prompt2: data.prompt2
-    }, (response) => {
-      console.log("Background initiation response:", response);
-    });
+    try {
+      chrome.runtime.sendMessage({
+        action: "START_AUTOMATION",
+        prompt1: data.prompt1,
+        prompt2: data.prompt2
+      }, (response) => {
+        if (chrome.runtime.lastError) {
+          console.error("Bridge received runtime error from background:", chrome.runtime.lastError.message);
+          window.dispatchEvent(new CustomEvent("COPILOT_PROGRESS_UPDATE_EVENT", {
+            detail: {
+              status: "failed",
+              logs: ["Failed to connect to Extension Background. Re-load the extension or restart your browser."]
+            }
+          }));
+        } else {
+          console.log("Background initiation response:", response);
+        }
+      });
+    } catch (err) {
+      console.error("Bridge exception sending message:", err);
+      window.dispatchEvent(new CustomEvent("COPILOT_PROGRESS_UPDATE_EVENT", {
+        detail: {
+          status: "failed",
+          logs: ["Extension communication error: " + err.message]
+        }
+      }));
+    }
   });
 
   // 3. Listen to automation progress updates sent back from the background worker
