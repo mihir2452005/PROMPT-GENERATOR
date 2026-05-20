@@ -153,6 +153,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
   const [stitchedVideoUrl, setStitchedVideoUrl] = useState('')
   const [stitchProgress, setStitchProgress] = useState('')
   const [showExtensionModal, setShowExtensionModal] = useState(false)
+  const [pendingCompilePrompts, setPendingCompilePrompts] = useState(null)
 
   // Listen for extension installation & messaging bridges
   useEffect(() => {
@@ -192,6 +193,26 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
     }
   }, [])
 
+  // Auto-resume compilation after page reload if extension is now active
+  useEffect(() => {
+    const stored = localStorage.getItem('pending_auto_compile')
+    const active = document.body.dataset.metaCopilotInstalled === "true"
+    
+    if (stored && (active || isExtensionInstalled)) {
+      try {
+        const parsed = JSON.parse(stored)
+        localStorage.removeItem('pending_auto_compile')
+        setPendingCompilePrompts(null)
+        setTimeout(() => {
+          handleStartAutoCompile(parsed.prompt1, parsed.prompt2)
+        }, 800)
+      } catch (e) {
+        console.error('Failed to auto-resume compilation:', e)
+        localStorage.removeItem('pending_auto_compile')
+      }
+    }
+  }, [isExtensionInstalled])
+
   const handleLaunchMetaAICopilot = (promptText, clipName, partNum, shouldOpenTab) => {
     navigator.clipboard.writeText(promptText)
     setCopilotPromptText(promptText)
@@ -205,10 +226,17 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
   // 1-Click Auto Compile trigger
   const handleStartAutoCompile = (prompt1, prompt2) => {
-    if (!isExtensionInstalled) {
+    const active = document.body.dataset.metaCopilotInstalled === "true"
+    
+    if (!active && !isExtensionInstalled) {
+      setPendingCompilePrompts({ prompt1, prompt2 })
+      localStorage.setItem('pending_auto_compile', JSON.stringify({ prompt1, prompt2 }))
       setShowExtensionModal(true)
       return
     }
+
+    localStorage.removeItem('pending_auto_compile')
+    setPendingCompilePrompts(null)
 
     setCopilotLogs(["Initiating automatic browser co-pilot compilation...", "Opening Meta AI in background..."])
     setCopilotStatus("generating_part1")
@@ -222,6 +250,43 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
       prompt1,
       prompt2
     }, "*")
+  }
+
+  // Handle click on "I Loaded It! Ready to Compile"
+  const handleModalReadyToCompile = () => {
+    const active = document.body.dataset.metaCopilotInstalled === "true"
+    
+    if (active) {
+      setIsExtensionInstalled(true)
+      setShowExtensionModal(false)
+      
+      let p1 = pendingCompilePrompts?.prompt1
+      let p2 = pendingCompilePrompts?.prompt2
+      
+      if (!p1 || !p2) {
+        try {
+          const stored = localStorage.getItem('pending_auto_compile')
+          if (stored) {
+            const parsed = JSON.parse(stored)
+            p1 = parsed.prompt1
+            p2 = parsed.prompt2
+          }
+        } catch (e) {
+          console.error(e)
+        }
+      }
+      
+      if (p1 && p2) {
+        handleStartAutoCompile(p1, p2)
+      }
+    } else {
+      const confirmReload = window.confirm(
+        "Extension loaded! However, Brave/Chrome needs to reload this page to activate it in this tab.\n\nClick OK to reload and start compiling automatically!"
+      )
+      if (confirmReload) {
+        window.location.reload()
+      }
+    }
   }
 
   // Canvas video stitching pipeline invocation
@@ -916,7 +981,7 @@ export default function PromptGenerator({ prefill, onGenerateSuccess, onFavorite
 
               <div className="flex gap-2">
                 <button
-                  onClick={() => setShowExtensionModal(false)}
+                  onClick={handleModalReadyToCompile}
                   className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 text-white font-extrabold text-xs transition-all shadow-md shadow-purple-500/20"
                 >
                   I Loaded It! Ready to Compile 🚀
